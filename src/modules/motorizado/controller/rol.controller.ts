@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { RolService } from '../services/rol.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { RolService } from '../services/rol.service';
 import { RolDto } from '../dtos/rol.dto';
 import { customResponse } from 'src/common/response';
 

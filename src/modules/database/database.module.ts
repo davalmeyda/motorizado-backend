@@ -13,7 +13,7 @@ import config from 'src/config/config';
 					host: configService.host,
 					port: parseInt(configService.port_db),
 					username: configService.user_name,
-					password: configService.password,
+					password: configService.password === 'null' ? '' : configService.password,
 					database: configService.database,
 					autoLoadEntities: true,
 					synchronize: false,
@@ -24,4 +24,4 @@ import config from 'src/config/config';
 	],
 	exports: [TypeOrmModule],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }
