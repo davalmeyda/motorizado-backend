@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 
 export class PedidoDto {
-
 	@IsString()
 	@ApiProperty()
 	correlativo: string;
@@ -19,9 +18,12 @@ export class PedidoDto {
 	@ApiProperty()
 	c_razonsocial: string;
 
-
 	@IsString()
 	@ApiProperty()
 	ca_cantidad: string;
-
+}
+export class CodigosDto {
+	@IsArray()
+	@ApiProperty()
+	codigos: string[];
 }
