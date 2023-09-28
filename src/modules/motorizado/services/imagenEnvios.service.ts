@@ -16,6 +16,7 @@ export class ImagenEnviosService {
 		imagen.url_imagen = url;
 		imagen.user_id = user_id;
 		imagen.direccion_id = pedido.direccionDt.direccion.id;
-		return await this.imagenEnvioRespository.create(imagen);
+		imagen.created_at = new Date();
+		return await this.imagenEnvioRespository.save(imagen);
 	}
 }
