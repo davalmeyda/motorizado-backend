@@ -120,7 +120,8 @@ export class PedidoService {
 			},
 			select: ['codigo'],
 		});
-		if (codigos && codigos.length === 0) throw new NotFoundException('No se encontra el código');
+
+		if (!codigos) throw new NotFoundException('No se encuentran pedidos');
 
 		return codigos.length > 0 ? 'Existe' : 'No Existe';
 	}
