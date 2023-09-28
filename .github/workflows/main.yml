@@ -29,5 +29,5 @@ jobs:
       - name: Copy Deploy
         run: |
           cd dist  
-          sudo sshpass -p 'Khronos92' rsync -r . root@161.132.38.94:/data -e "ssh -p 32077 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-          sudo sshpass -p 'Khronos92' ssh -o StrictHostKeyChecking=no root@161.132.38.94 -p 32077 "cd /data && npm i && pm2 restart all"
+          sudo sshpass -p 'Khronos92' rsync -r . root@161.132.38.94:/data -e "ssh -p 32078 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          sudo sshpass -p 'Khronos92' ssh -o StrictHostKeyChecking=no root@161.132.38.94 -p 32078 "cd /data && npm i && pm2 restart all"
