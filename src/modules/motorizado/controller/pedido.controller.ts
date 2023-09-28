@@ -53,8 +53,8 @@ export class PedidoController {
 
 	@Get('/consultaCodigo/:codigo')
 	@ApiOperation({ summary: 'Listar todos los pedidos recibidos' })
-	async consultaCodigo(@Param('codigo') codigo: string) {
-		const response = await this.pedidoService.consultaCodigo(codigo);
+	async consultaCodigo(@Param('codigo') codigo: string, @Query('idUser') idUsuario: string) {
+		const response = await this.pedidoService.consultaCodigo(codigo, idUsuario);
 		return customResponse('pedidos', response);
 	}
 

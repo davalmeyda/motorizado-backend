@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pedido } from '../entities/pedido.entity';
-import { ILike, In, Like, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { CodigosDto } from '../dtos/pedido.dto';
 import { Direccion } from '../entities/direcciones.entity';
 import { Cliente } from '../entities/cliente.entity';
@@ -113,17 +113,25 @@ export class PedidoService {
 		return { pedido, cliente, ubicacion, agencia };
 	}
 
-	async consultaCodigo(cod: string) {
-		const codigos = await this.pedidoRespository.find({
-			where: {
-				codigo: Like(cod),
+	async consultaCodigo(cod: string, idUser: string) {
+		const direccionDt = [
+			{
+				direccion: {
+					id_motorizado: parseInt(idUser, 10),
+				},
 			},
-			select: ['codigo'],
+		];
+
+		const pedidos = await this.pedidoRespository.findAndCount({
+			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
+			where: [
+				{
+					codigo: ILike(cod),
+					direccionDt,
+				},
+			],
 		});
-
-		if (!codigos) throw new NotFoundException('No se encuentran pedidos');
-
-		return codigos.length > 0 ? 'Existe' : 'No Existe';
+		return pedidos[1] > 0 ? 'Existe' : 'No Existe';
 	}
 
 	async changeStatus(codigosDto: CodigosDto) {
