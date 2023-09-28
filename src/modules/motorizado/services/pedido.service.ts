@@ -122,7 +122,7 @@ export class PedidoService {
 			},
 		];
 
-		const pedidos = await this.pedidoRespository.findAndCount({
+		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
 			where: [
 				{
@@ -131,7 +131,10 @@ export class PedidoService {
 				},
 			],
 		});
-		return pedidos[1] > 0 ? 'Existe' : 'No Existe';
+		if (!pedido) throw new NotFoundException('No se encontró el codigo');
+		if (pedido.direccionDt.direccion.id_motorizado !== parseInt(idUser, 10))
+			throw new NotFoundException('No tiene permisos para acceder a este pedido');
+		return pedido;
 	}
 
 	async changeStatus(codigosDto: CodigosDto) {
