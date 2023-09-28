@@ -114,20 +114,11 @@ export class PedidoService {
 	}
 
 	async consultaCodigo(cod: string, idUser: string) {
-		const direccionDt = [
-			{
-				direccion: {
-					id_motorizado: parseInt(idUser, 10),
-				},
-			},
-		];
-
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
 			where: [
 				{
 					codigo: ILike(cod),
-					direccionDt,
 				},
 			],
 		});
