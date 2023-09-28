@@ -123,6 +123,8 @@ export class PedidoService {
 			],
 		});
 		if (!pedido) throw new NotFoundException('No se encontró el codigo');
+		if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
+		if (!pedido.direccionDt.direccion) throw new NotFoundException('No tiene dirección');
 		if (pedido.direccionDt.direccion.id_motorizado !== parseInt(idUser, 10))
 			throw new NotFoundException('No tiene permisos para acceder a este pedido');
 		return pedido;
