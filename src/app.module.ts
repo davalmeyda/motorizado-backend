@@ -6,9 +6,15 @@ import { MotorizadoModule } from './modules/motorizado/motorizado.module';
 import { ConfigModule } from '@nestjs/config';
 import config, { validation } from './config/config';
 import * as Joi from 'joi';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
 	imports: [
+		ServeStaticModule.forRoot({
+			rootPath:
+				process.env.TIPO === 'PROD' ? join(__dirname, 'public') : join(__dirname, '..', 'public'),
+		}),
 		ConfigModule.forRoot({
 			// * Definimos que es global
 			isGlobal: true,
