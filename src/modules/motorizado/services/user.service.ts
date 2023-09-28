@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
@@ -48,7 +48,7 @@ export class UserService {
 				if (ROLES_PERMITIDOS.includes(user.rol)) {
 					return user;
 				}
-				throw new Error('No tiene permisos para acceder');
+				throw new NotFoundException('No tiene permisos para acceder');
 			} else {
 				return 0;
 			}

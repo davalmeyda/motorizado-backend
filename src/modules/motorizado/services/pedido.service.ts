@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pedido } from '../entities/pedido.entity';
 import { ILike, In, Repository } from 'typeorm';
@@ -99,7 +99,7 @@ export class PedidoService {
 				codigo: cod,
 			},
 		});
-		if (!pedido) throw new Error('No se encontro el pedido');
+		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		const cliente = await this.clienteRespository.findOne({
 			where: { id: pedido?.direccionDt?.direccion?.id_cliente },
 		});
@@ -119,7 +119,7 @@ export class PedidoService {
 			where: { codigo: In(codigosDto.codigos) },
 		});
 		if (!pedidos || pedidos.length === 0)
-			throw new Error('No se encontraron pedidos con los codigos enviados');
+			throw new NotFoundException('No se encontraron pedidos con los codigos enviados');
 		const ids = [];
 		pedidos
 			.filter(p => (p.direccionDt ? true : false))
@@ -128,13 +128,15 @@ export class PedidoService {
 				ids.push(pedido.direccionDt.direccion.id);
 			});
 		if (ids.length === 0)
-			throw new Error('No se encontraron pedidos con los codigos enviados para este usuario');
+			throw new NotFoundException(
+				'No se encontraron pedidos con los codigos enviados para este usuario',
+			);
 		return this.direccionRespository.update({ id: In(ids) }, { recibido: 1 });
 	}
 
 	async changeStatusEntregado(codigo: string, idUser: number, importe: string = '0') {
-		if (!idUser) throw new Error('Debe tener el id del usuario');
-		if (!importe) throw new Error('Debe tener un importe');
+		if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
+		if (!importe) throw new NotFoundException('Debe tener un importe');
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion'],
 			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
@@ -147,15 +149,15 @@ export class PedidoService {
 	}
 
 	async createReprogramar(codigo: string, idUser: number, motivo: string) {
-		if (!idUser) throw new Error('Debe tener el id del usuario');
-		if (!motivo) throw new Error('Debe tener un motivo');
+		if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
+		if (!motivo) throw new NotFoundException('Debe tener un motivo');
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion'],
 			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
 		});
-		if (!pedido) throw new Error('No se encontro el pedido');
+		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		if (pedido.direccionDt?.direccion?.id_motorizado !== idUser)
-			throw new Error('No puede reprogramar el pedido');
+			throw new NotFoundException('No puede reprogramar el pedido');
 		const direccion = pedido.direccionDt.direccion;
 		const reprogramacion = new EnviosReprogramaciones();
 		reprogramacion.direccion = direccion;
