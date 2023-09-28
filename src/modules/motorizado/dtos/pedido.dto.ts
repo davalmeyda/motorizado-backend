@@ -35,14 +35,4 @@ export class CodigosDto {
 export class ImagenEnvioDto {
 	@ApiProperty({ type: 'string', format: 'binary', required: false })
 	imagen: any;
-
-	@IsOptional()
-	@IsNumber()
-	@ApiProperty()
-	user_id: number;
-
-	@IsOptional()
-	@IsNumber()
-	@ApiProperty()
-	importe: number;
 }

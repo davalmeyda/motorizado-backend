@@ -16,6 +16,9 @@ import { Cliente } from './entities/cliente.entity';
 import { Agencia } from './entities/agencias.entity';
 import { ImagenEnviosService } from './services/imagenEnvios.service';
 import { ImagenEnvio } from './entities/imagenEnvios.entity';
+import { ImagenReprogramadoService } from './services/imagenReprogramados.service';
+import { ImagenReprogramado } from './entities/imagenReprogramado.entity';
+import { EnviosReprogramaciones } from './entities/enviosReprogramaciones.entity';
 
 @Module({
 	imports: [
@@ -29,9 +32,17 @@ import { ImagenEnvio } from './entities/imagenEnvios.entity';
 			Cliente,
 			Agencia,
 			ImagenEnvio,
+			EnviosReprogramaciones,
+			ImagenReprogramado,
 		]),
 	],
-	providers: [RolService, UserService, PedidoService, ImagenEnviosService],
+	providers: [
+		RolService,
+		UserService,
+		PedidoService,
+		ImagenEnviosService,
+		ImagenReprogramadoService,
+	],
 	controllers: [RolController, UserController, PedidoController],
 })
 export class MotorizadoModule {}

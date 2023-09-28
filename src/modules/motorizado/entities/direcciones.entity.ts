@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { DireccionDT } from './direccionesdt.entity';
+import { EnviosReprogramaciones } from './enviosReprogramaciones.entity';
 
 @Entity({ name: 'direcciones_sobres' })
 export class Direccion {
@@ -55,6 +56,9 @@ export class Direccion {
 	estado: number;
 
 	@Column()
+	importe: string;
+
+	@Column()
 	recibido: number;
 
 	@Column()
@@ -63,6 +67,15 @@ export class Direccion {
 	@Column()
 	confirmado: number;
 
+	@Column()
+	estado_dir: string;
+
+	@Column()
+	estado_dir_code: number;
+
 	@OneToMany(() => DireccionDT, direccionDt => direccionDt.direccion)
 	direciones: DireccionDT[];
+
+	@OneToMany(() => EnviosReprogramaciones, model => model.direccion)
+	reprogramaciones: EnviosReprogramaciones[];
 }

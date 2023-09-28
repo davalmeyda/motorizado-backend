@@ -7,6 +7,7 @@ import { Direccion } from '../entities/direcciones.entity';
 import { Cliente } from '../entities/cliente.entity';
 import { Ubicacion } from '../entities/ubicaciones.entity';
 import { Agencia } from '../entities/agencias.entity';
+import { EnviosReprogramaciones } from '../entities/enviosReprogramaciones.entity';
 // import { PedidoDto } from '../dtos/pedido.dto';
 
 @Injectable()
@@ -17,6 +18,8 @@ export class PedidoService {
 		@InjectRepository(Cliente) private readonly clienteRespository: Repository<Cliente>,
 		@InjectRepository(Ubicacion) private readonly ubicacionRespository: Repository<Ubicacion>,
 		@InjectRepository(Agencia) private readonly agenciaRespository: Repository<Agencia>,
+		@InjectRepository(EnviosReprogramaciones)
+		private readonly enviosReprogramacionRespository: Repository<EnviosReprogramaciones>,
 	) {}
 
 	findAll(search: string) {
@@ -35,7 +38,7 @@ export class PedidoService {
 
 	findAllPendientes(search: string, idUser: number) {
 		return this.pedidoRespository.findAndCount({
-			relations: ['direccionDt', 'direccionDt.direccion'],
+			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
 			where: [
 				{
 					correlativo: ILike('%' + (search || '') + '%'),
@@ -56,12 +59,26 @@ export class PedidoService {
 
 	findAllRecibidos(search: string, idUser: number) {
 		const direccionDt = [
-			{ direccion: { id_ubicacion: 1, recibido: 1, id_motorizado: idUser, entregado: 0 } },
-			{ direccion: { id_agencia: 3, recibido: 1, id_motorizado: idUser, entregado: 0 } },
+			{
+				direccion: {
+					id_ubicacion: 1,
+					recibido: 1,
+					id_motorizado: idUser,
+					entregado: 0,
+				},
+			},
+			{
+				direccion: {
+					id_agencia: 3,
+					recibido: 1,
+					id_motorizado: idUser,
+					entregado: 0,
+				},
+			},
 		];
 
 		return this.pedidoRespository.findAndCount({
-			relations: ['direccionDt', 'direccionDt.direccion'],
+			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
 			where: [
 				{
 					correlativo: ILike('%' + (search || '') + '%'),
@@ -77,7 +94,7 @@ export class PedidoService {
 
 	async findOne(cod: string) {
 		const pedido = await this.pedidoRespository.findOne({
-			relations: ['direccionDt', 'direccionDt.direccion'],
+			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
 			where: {
 				codigo: cod,
 			},
@@ -115,13 +132,36 @@ export class PedidoService {
 		return this.direccionRespository.update({ id: In(ids) }, { recibido: 1 });
 	}
 
-	async changeStatusEntregado(codigo: string, idUser: number, importe: number = 0) {
-		console.log(importe);
+	async changeStatusEntregado(codigo: string, idUser: number, importe: string = '0') {
+		if (!idUser) throw new Error('Debe tener el id del usuario');
+		if (!importe) throw new Error('Debe tener un importe');
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion'],
 			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
 		});
 		const id = pedido.direccionDt.direccion.id;
-		return this.direccionRespository.update({ id }, { entregado: 1 });
+		return this.direccionRespository.update(
+			{ id },
+			{ entregado: 1, importe, estado_dir: 'PRE ENTREGADO - CLIENTE', estado_dir_code: 16 },
+		);
+	}
+
+	async createReprogramar(codigo: string, idUser: number, motivo: string) {
+		if (!idUser) throw new Error('Debe tener el id del usuario');
+		if (!motivo) throw new Error('Debe tener un motivo');
+		const pedido = await this.pedidoRespository.findOne({
+			relations: ['direccionDt', 'direccionDt.direccion'],
+			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
+		});
+		if (!pedido) throw new Error('No se encontro el pedido');
+		if (pedido.direccionDt?.direccion?.id_motorizado !== idUser)
+			throw new Error('No puede reprogramar el pedido');
+		const direccion = pedido.direccionDt.direccion;
+		const reprogramacion = new EnviosReprogramaciones();
+		reprogramacion.direccion = direccion;
+		reprogramacion.motivo = motivo;
+		reprogramacion.user_id = idUser;
+		reprogramacion.created_at = new Date();
+		return this.enviosReprogramacionRespository.save(reprogramacion);
 	}
 }
