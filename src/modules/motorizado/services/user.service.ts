@@ -5,9 +5,10 @@ import { Repository } from 'typeorm';
 import { LoginDto, UserDto } from '../dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 
+const ROLES_PERMITIDOS = ['Administrador', 'MOTORIZADO'];
 @Injectable()
 export class UserService {
-	constructor(@InjectRepository(User) private readonly UserRespository: Repository<User>) { }
+	constructor(@InjectRepository(User) private readonly UserRespository: Repository<User>) {}
 
 	findAll() {
 		return this.UserRespository.find();
@@ -29,33 +30,28 @@ export class UserService {
 		return this.UserRespository.save(newUser);
 	}
 
-	async  login(userLogin: LoginDto) {
-
+	async login(userLogin: LoginDto) {
 		const { password, email } = userLogin;
-		//-- HASH PASSWORD
-		const saltRounds = 10; // Número de rondas de sal (mayor es más seguro pero más lento)
-		const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-		//return hashedPassword;
 		const user = await this.UserRespository.findOne({
 			where: {
-				email
+				email,
 			},
-			select: { email: true, password: true ,id: true}
 		});
-		//return user.password;
-
-		if(user){
-		
-			const hashPass = /^\$2y\$/.test(user.password) ? '$2b$' + user.password.slice(4) : user.password;
+		if (user) {
+			const hashPass = /^\$2y\$/.test(user.password)
+				? '$2b$' + user.password.slice(4)
+				: user.password;
 			const match = await bcrypt.compare(password, hashPass);
 
-			if (match) { /* USUARIO Y CONTRASEÑA COINCIDEN*/ 
-				return 1;
-			}else{
+			if (match) {
+				if (ROLES_PERMITIDOS.includes(user.rol)) {
+					return user;
+				}
+				throw new Error('No tiene permisos para acceder');
+			} else {
 				return 0;
 			}
-
 		} else {
 			return 0;
 		}

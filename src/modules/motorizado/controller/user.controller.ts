@@ -1,19 +1,27 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpException,
+	HttpStatus,
+	Param,
+	Post,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { LoginDto, UserDto } from '../dtos/user.dto';
 import { customResponse } from 'src/common/response';
-import { boolean } from 'joi';
 
 @Controller('users')
 @ApiTags('Usuario')
 export class UserController {
-	constructor(private readonly UserService: UserService) { }
+	constructor(private readonly userService: UserService) {}
 
 	@Get()
 	@ApiOperation({ summary: 'Listar todos los usuarios' })
 	async findAll() {
-		const response = await this.UserService.findAll();
+		const response = await this.userService.findAll();
 		return customResponse('Usuario', response);
 	}
 
@@ -26,7 +34,7 @@ export class UserController {
 	@Post()
 	@ApiOperation({ summary: 'Crear usuario' })
 	async create(@Body() user: UserDto) {
-		return this.UserService.create(user);
+		return this.userService.create(user);
 	}
 
 	// @Post('login')
@@ -38,32 +46,25 @@ export class UserController {
 	@Delete(':id')
 	@ApiOperation({ summary: 'Eliminar usuario' })
 	async delete(@Param('id') id: number) {
-		return this.UserService.delete(id);
+		return this.userService.delete(id);
 	}
 
-	//-- LOGIN 
+	//-- LOGIN
 	@Post('login')
 	@ApiOperation({ summary: 'Login usuario' })
 	async LoginUser(@Body() UserDto: LoginDto) {
 		// Aquí deberías realizar la lógica de autenticación
 		// Verifica las credenciales y determina si el inicio de sesión es exitoso
 
-		const authUser = this.UserService.login(UserDto);
+		const authUser = await this.userService.login(UserDto);
 
-	
-		if (await authUser != 0) {
+		if (authUser != 0) {
 			// Si el inicio de sesión es exitoso, devuelve un JSON de respuesta
-			
+
 			const statusCode = HttpStatus.ACCEPTED;
-			return {
-				message: 'Inicio de sesión exitoso',
-				statusCode,
-			}
+			return customResponse('Usuario', authUser, statusCode);
 		} else {
 			throw new HttpException('Credenciales incorrectas', HttpStatus.UNAUTHORIZED);
-
 		}
 	}
-
-
 }

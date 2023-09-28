@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class PedidoDto {
 	@IsString()
@@ -26,4 +26,23 @@ export class CodigosDto {
 	@IsArray()
 	@ApiProperty()
 	codigos: string[];
+
+	@IsOptional()
+	@IsNumber()
+	@ApiProperty()
+	idUser: number;
+}
+export class ImagenEnvioDto {
+	@ApiProperty({ type: 'string', format: 'binary', required: false })
+	imagen: any;
+
+	@IsOptional()
+	@IsNumber()
+	@ApiProperty()
+	user_id: number;
+
+	@IsOptional()
+	@IsNumber()
+	@ApiProperty()
+	importe: number;
 }

@@ -6,22 +6,16 @@ import {
 	UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'clientes' })
-export class Cliente {
+@Entity({ name: 'agencias' })
+export class Agencia {
 	@PrimaryGeneratedColumn()
 	id: number;
 
 	@Column()
-	correlativo: string;
+	cod_agencia: string;
 
 	@Column()
-	nombre: string;
-
-	@Column()
-	celular: number;
-
-	@Column()
-	dni: string;
+	nombre_agencia: string;
 
 	@CreateDateColumn()
 	created_at: Date;

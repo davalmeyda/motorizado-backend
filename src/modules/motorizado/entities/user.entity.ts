@@ -20,6 +20,8 @@ export class User {
 	@Column()
 	password: string;
 
+	@Column()
+	rol: string;
 
 	@CreateDateColumn()
 	created_at: Date;

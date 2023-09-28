@@ -1,11 +1,4 @@
-import {
-	Column,
-	CreateDateColumn,
-	Entity,
-	OneToMany,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { DireccionDT } from './direccionesdt.entity';
 
 @Entity({ name: 'direcciones_sobres' })
@@ -17,13 +10,58 @@ export class Direccion {
 	correlativo: string;
 
 	@Column()
-	direccion: string;
+	id_agencia: number;
 
 	@Column()
 	id_cliente: number;
 
 	@Column()
-	recibido: string;
+	id_ubicacion: number;
+
+	@Column()
+	id_motorizado: number;
+
+	@Column()
+	dni_ruc: string;
+
+	@Column()
+	nombre_contacto: string;
+
+	@Column()
+	celulares: string;
+
+	@Column()
+	direccion: string;
+
+	@Column()
+	departamento: string;
+
+	@Column()
+	provincia: string;
+
+	@Column()
+	distrito: string;
+
+	@Column()
+	referencia: string;
+
+	@Column()
+	observaciones: string;
+
+	@Column()
+	google_maps: string;
+
+	@Column()
+	estado: number;
+
+	@Column()
+	recibido: number;
+
+	@Column()
+	entregado: number;
+
+	@Column()
+	confirmado: number;
 
 	@OneToMany(() => DireccionDT, direccionDt => direccionDt.direccion)
 	direciones: DireccionDT[];

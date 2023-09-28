@@ -11,11 +11,27 @@ import { PedidoController } from './controller/pedido.controller';
 import { PedidoService } from './services/pedido.service';
 import { Direccion } from './entities/direcciones.entity';
 import { DireccionDT } from './entities/direccionesdt.entity';
-
+import { Ubicacion } from './entities/ubicaciones.entity';
+import { Cliente } from './entities/cliente.entity';
+import { Agencia } from './entities/agencias.entity';
+import { ImagenEnviosService } from './services/imagenEnvios.service';
+import { ImagenEnvio } from './entities/imagenEnvios.entity';
 
 @Module({
-	imports: [TypeOrmModule.forFeature([Rol, User, Pedido, Direccion, DireccionDT])],
-	providers: [RolService, UserService, PedidoService],
+	imports: [
+		TypeOrmModule.forFeature([
+			Rol,
+			User,
+			Pedido,
+			Direccion,
+			DireccionDT,
+			Ubicacion,
+			Cliente,
+			Agencia,
+			ImagenEnvio,
+		]),
+	],
+	providers: [RolService, UserService, PedidoService, ImagenEnviosService],
 	controllers: [RolController, UserController, PedidoController],
 })
-export class MotorizadoModule { }
+export class MotorizadoModule {}

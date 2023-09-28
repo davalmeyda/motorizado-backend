@@ -34,8 +34,6 @@ export class Pedido {
 	@UpdateDateColumn()
 	updated_at: Date;
 
-	@OneToOne(()=> DireccionDT, direccion=> direccion.pedido)
-	direccionDt: DireccionDT
-
-
+	@OneToOne(() => DireccionDT, direccion => direccion.pedido)
+	direccionDt: DireccionDT;
 }

@@ -6,22 +6,19 @@ import {
 	UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'clientes' })
-export class Cliente {
+@Entity({ name: 'imagen_envios' })
+export class ImagenEnvio {
 	@PrimaryGeneratedColumn()
 	id: number;
 
 	@Column()
-	correlativo: string;
+	url_imagen: string;
 
 	@Column()
-	nombre: string;
+	user_id: number;
 
 	@Column()
-	celular: number;
-
-	@Column()
-	dni: string;
+	direccion_id: number;
 
 	@CreateDateColumn()
 	created_at: Date;
