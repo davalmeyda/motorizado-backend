@@ -51,6 +51,12 @@ export class PedidoController {
 		return customResponse('pedidos', response);
 	}
 
+	@Get('/consultaCodigo/:codigo')
+	@ApiOperation({ summary: 'Listar todos los pedidos recibidos' })
+	async consultaCodigo(@Param('codigo') codigo: string) {
+		return await this.pedidoService.consultaCodigo(codigo);
+	}
+
 	@Get(':id')
 	@ApiOperation({ summary: 'Buscar pedido por id' })
 	async findOne(@Param('id') cod: string) {

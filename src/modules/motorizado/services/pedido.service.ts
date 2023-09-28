@@ -113,6 +113,18 @@ export class PedidoService {
 		return { pedido, cliente, ubicacion, agencia };
 	}
 
+	async consultaCodigo(cod: string) {
+		const codigos = await this.pedidoRespository.findAndCount({
+			where: {
+				codigo: cod,
+			},
+			select: ['codigo'],
+		});
+		if (!codigos) throw new NotFoundException('No se encontra el código');
+
+		return codigos.length > 0 ? 'Existe' : 'No Existe';
+	}
+
 	async changeStatus(codigosDto: CodigosDto) {
 		const pedidos = await this.pedidoRespository.find({
 			relations: ['direccionDt', 'direccionDt.direccion'],
