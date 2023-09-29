@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { LoginDto, UserDto } from '../dtos/user.dto';
 import * as bcrypt from 'bcrypt';
 
-const ROLES_PERMITIDOS = ['Administrador', 'MOTORIZADO'];
+const ROLES_PERMITIDOS = ['MOTORIZADO'];
 @Injectable()
 export class UserService {
 	constructor(@InjectRepository(User) private readonly UserRespository: Repository<User>) {}
@@ -50,10 +50,10 @@ export class UserService {
 				}
 				throw new NotFoundException('No tiene permisos para acceder');
 			} else {
-				return 0;
+				throw new NotFoundException('No se encontro el usuario');
 			}
 		} else {
-			return 0;
+			throw new NotFoundException('No se encontro el usuario');
 		}
 	}
 

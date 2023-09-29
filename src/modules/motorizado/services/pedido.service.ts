@@ -1,20 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pedido } from '../entities/pedido.entity';
-import { ILike, In, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, Not, Repository } from 'typeorm';
 import { CodigosDto } from '../dtos/pedido.dto';
 import { Direccion } from '../entities/direcciones.entity';
 import { Cliente } from '../entities/cliente.entity';
 import { Ubicacion } from '../entities/ubicaciones.entity';
 import { Agencia } from '../entities/agencias.entity';
 import { EnviosReprogramaciones } from '../entities/enviosReprogramaciones.entity';
-// import { PedidoDto } from '../dtos/pedido.dto';
+import { DireccionDT } from '../entities/direccionesdt.entity';
 
 @Injectable()
 export class PedidoService {
 	constructor(
 		@InjectRepository(Pedido) private readonly pedidoRespository: Repository<Pedido>,
 		@InjectRepository(Direccion) private readonly direccionRespository: Repository<Direccion>,
+		@InjectRepository(DireccionDT) private readonly direccionDtRespository: Repository<DireccionDT>,
 		@InjectRepository(Cliente) private readonly clienteRespository: Repository<Cliente>,
 		@InjectRepository(Ubicacion) private readonly ubicacionRespository: Repository<Ubicacion>,
 		@InjectRepository(Agencia) private readonly agenciaRespository: Repository<Agencia>,
@@ -23,94 +24,170 @@ export class PedidoService {
 	) {}
 
 	findAll(search: string) {
-		return this.pedidoRespository.findAndCount({
-			relations: ['direccionDt', 'direccionDt.direccion'],
+		return this.direccionRespository.findAndCount({
+			relations: ['direciones', 'direciones.pedido'],
 			where: [
 				{
-					correlativo: ILike('%' + (search || '') + '%'),
-				},
-				{
-					codigo: ILike('%' + (search || '') + '%'),
-				},
-			],
-		});
-	}
-
-	findAllPendientes(search: string, idUser: number) {
-		return this.pedidoRespository.findAndCount({
-			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
-			where: [
-				{
-					correlativo: ILike('%' + (search || '') + '%'),
-					direccionDt: {
-						direccion: [{ recibido: 0, id_motorizado: idUser }, { recibido: 0 }],
+					direciones: {
+						pedido: [
+							{
+								correlativo: ILike('%' + (search || '') + '%'),
+							},
+							{
+								codigo: ILike('%' + (search || '') + '%'),
+							},
+						],
 					},
 				},
-				{
-					codigo: ILike('%' + (search || '') + '%'),
-					direccionDt: [
-						{ direccion: { recibido: 0, id_motorizado: idUser } },
-						{ direccion: { recibido: 0, id_motorizado: idUser } },
-					],
-				},
 			],
 		});
 	}
 
-	findAllRecibidos(search: string, idUser: number) {
-		const direccionDt = [
-			{
-				direccion: {
-					id_ubicacion: 1,
-					recibido: 1,
-					id_motorizado: idUser,
-					entregado: 0,
-				},
-			},
-			{
-				direccion: {
-					id_agencia: 3,
-					recibido: 1,
-					id_motorizado: idUser,
-					entregado: 0,
-				},
-			},
-		];
-
-		return this.pedidoRespository.findAndCount({
-			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
-			where: [
+	async findAllPendientes(search: string, idUser: number) {
+		const direcciones = {
+			pedido: [
 				{
 					correlativo: ILike('%' + (search || '') + '%'),
-					direccionDt,
 				},
 				{
 					codigo: ILike('%' + (search || '') + '%'),
-					direccionDt,
+				},
+			],
+		};
+		const where: FindOptionsWhere<Direccion>[] = [
+			{
+				recibido: Not(2),
+				id_motorizado: idUser,
+				direciones: direcciones,
+			},
+		];
+		return this.direccionRespository.findAndCount({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where,
+		});
+	}
+
+	async findAllRecibidos(search: string, idUser: number) {
+		const direciones = {
+			pedido: [
+				{
+					correlativo: ILike('%' + (search || '') + '%'),
+				},
+				{
+					codigo: ILike('%' + (search || '') + '%'),
+				},
+			],
+		};
+		const respDirecciones = await this.direccionRespository.findAndCount({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: [
+				{
+					id_ubicacion: 1,
+					recibido: In([1, 2]),
+					id_motorizado: idUser,
+					entregado: Not(2),
+					direciones,
+				},
+				{
+					id_agencia: 3,
+					recibido: In([1, 2]),
+					id_motorizado: idUser,
+					entregado: Not(2),
+					direciones,
 				},
 			],
 		});
+		const arrDirecciones = [];
+		respDirecciones[0].forEach(direccion => {
+			direccion.direciones.forEach(dir => {
+				if (dir.entregado !== 1 && dir.recibido === 1) {
+					arrDirecciones.push(direccion);
+				}
+			});
+		});
+		return [arrDirecciones, arrDirecciones.length];
 	}
 
 	async findOne(cod: string) {
-		const pedido = await this.pedidoRespository.findOne({
-			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
+		const direccion = await this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: {
-				codigo: cod,
+				direciones: { pedido: { codigo: ILike(cod) } },
 			},
 		});
-		if (!pedido) throw new NotFoundException('No se encontro el pedido');
+		if (!direccion) throw new NotFoundException('No se encontro el pedido');
 		const cliente = await this.clienteRespository.findOne({
-			where: { id: pedido?.direccionDt?.direccion?.id_cliente },
+			where: { id: direccion.id_cliente },
 		});
 		const ubicacion = await this.ubicacionRespository.findOne({
-			where: { id: pedido?.direccionDt?.direccion?.id_ubicacion },
+			where: { id: direccion.id_ubicacion },
 		});
 		const agencia = await this.agenciaRespository.findOne({
-			where: { id: pedido?.direccionDt?.direccion?.id_agencia },
+			where: { id: direccion.id_agencia },
 		});
 
-		return { pedido, cliente, ubicacion, agencia };
+		return { direccion, cliente, ubicacion, agencia };
+	}
+
+	async findOneDireccion(id: string) {
+		const direccion = await this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: {
+				id: parseInt(id, 10),
+			},
+		});
+		if (!direccion) throw new NotFoundException('No se encontro el pedido');
+		const cliente = await this.clienteRespository.findOne({
+			where: { id: direccion.id_cliente },
+		});
+		const ubicacion = await this.ubicacionRespository.findOne({
+			where: { id: direccion.id_ubicacion },
+		});
+		const agencia = await this.agenciaRespository.findOne({
+			where: { id: direccion.id_agencia },
+		});
+
+		return { direccion, cliente, ubicacion, agencia };
+	}
+
+	async findOneToDeliver(cod: string) {
+		const pedido = await this.pedidoRespository.findOne({
+			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
+			where: { codigo: ILike(cod) },
+		});
+		if (!pedido) throw new NotFoundException('No se encontro el pedido');
+		if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
+		if (!pedido.direccionDt.direccion) throw new NotFoundException('No tiene dirección');
+		if (pedido.direccionDt.recibido != 1)
+			throw new NotFoundException('No se puede entregar el pedido');
+		const direccion = await this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: {
+				direciones: { pedido: { codigo: ILike(cod) } },
+			},
+		});
+		if (!direccion) throw new NotFoundException('No se encontro el pedido');
+		const cliente = await this.clienteRespository.findOne({
+			where: { id: direccion.id_cliente },
+		});
+		const ubicacion = await this.ubicacionRespository.findOne({
+			where: { id: direccion.id_ubicacion },
+		});
+		const agencia = await this.agenciaRespository.findOne({
+			where: { id: direccion.id_agencia },
+		});
+
+		const direccionConPedidos = await this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: {
+				id: direccion.id,
+				direciones: {
+					recibido: Not(0),
+				},
+			},
+		});
+
+		return { direccion: direccionConPedidos, cliente, ubicacion, agencia };
 	}
 
 	async consultaCodigo(cod: string, idUser: string) {
@@ -148,7 +225,42 @@ export class PedidoService {
 			throw new NotFoundException(
 				'No se encontraron pedidos con los codigos enviados para este usuario',
 			);
-		return this.direccionRespository.update({ id: In(ids) }, { recibido: 1 });
+
+		for (const pedido of pedidos) {
+			// * Cambiar estado de los pedidos
+			await this.pedidoRespository.update(
+				{ id: pedido.id },
+				{
+					condicion_envio: 'MOTORIZADO EN RUTA',
+					condicion_envio_code: 20,
+				},
+			);
+			await this.direccionDtRespository.update({ id: pedido.direccionDt.id }, { recibido: 1 });
+		}
+
+		// * Cambiar estado de la direccion solo cuando todos los pedidos hayan sido entregados
+		for (const id of ids) {
+			const pedidos = await this.pedidoRespository.find({
+				relations: ['direccionDt', 'direccionDt.direccion'],
+				where: { direccionDt: { direccion: { id } } },
+			});
+			const recibidos = pedidos.filter(p => p.direccionDt.recibido === 1);
+			if (pedidos.length === recibidos.length) {
+				await this.direccionRespository.update(
+					{ id },
+					{ recibido: 2, estado_dir: 'MOTORIZADO EN RUTA', estado_dir_code: 20 },
+				);
+			} else {
+				await this.direccionRespository.update(
+					{ id },
+					{ recibido: 1, estado_dir: 'MOTORIZADO EN RUTA', estado_dir_code: 20 },
+				);
+			}
+		}
+		return this.direccionRespository.find({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: { id: In(ids) },
+		});
 	}
 
 	async changeStatusEntregado(codigo: string, idUser: number, importe: string = '0') {
@@ -158,24 +270,66 @@ export class PedidoService {
 			relations: ['direccionDt', 'direccionDt.direccion'],
 			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
 		});
+		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		const id = pedido.direccionDt.direccion.id;
-		return this.direccionRespository.update(
-			{ id },
-			{ entregado: 1, importe, estado_dir: 'PRE ENTREGADO - CLIENTE', estado_dir_code: 16 },
+
+		await this.pedidoRespository.update(
+			{ id: pedido.id },
+			{
+				condicion_envio: 'PRE ENTREGADO - CLIENTE',
+				condicion_envio_code: 16,
+			},
 		);
+
+		const cambiarPedidos = await this.pedidoRespository.find({
+			relations: ['direccionDt', 'direccionDt.direccion'],
+			where: { direccionDt: { direccion: { id } } },
+		});
+
+		for (const pedidoCambiar of cambiarPedidos) {
+			if (pedidoCambiar.direccionDt.recibido === 1) {
+				await this.direccionDtRespository.update(
+					{ id: pedidoCambiar.direccionDt.id },
+					{ entregado: 1 },
+				);
+			}
+		}
+
+		const pedidos = await this.pedidoRespository.find({
+			relations: ['direccionDt', 'direccionDt.direccion'],
+			where: { direccionDt: { direccion: { id } } },
+		});
+
+		const entregados = pedidos.filter(p => p.direccionDt.entregado === 1);
+
+		if (pedidos.length === entregados.length) {
+			await this.direccionRespository.update(
+				{ id },
+				{ entregado: 2, importe, estado_dir: 'PRE ENTREGADO - CLIENTE', estado_dir_code: 16 },
+			);
+		} else {
+			await this.direccionRespository.update(
+				{ id },
+				{ entregado: 1, importe, estado_dir: 'PRE ENTREGADO - CLIENTE', estado_dir_code: 16 },
+			);
+		}
+		console.log(id);
+		return this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: { id },
+		});
 	}
 
-	async createReprogramar(codigo: string, idUser: number, motivo: string) {
+	async createReprogramar(id: string, idUser: number, motivo: string) {
 		if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
 		if (!motivo) throw new NotFoundException('Debe tener un motivo');
-		const pedido = await this.pedidoRespository.findOne({
-			relations: ['direccionDt', 'direccionDt.direccion'],
-			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
+		const direccion = await this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: { id: parseInt(id, 10) },
 		});
-		if (!pedido) throw new NotFoundException('No se encontro el pedido');
-		if (pedido.direccionDt?.direccion?.id_motorizado !== idUser)
+		if (!direccion) throw new NotFoundException('No se encontro la direccion');
+		if (direccion.id_motorizado !== idUser)
 			throw new NotFoundException('No puede reprogramar el pedido');
-		const direccion = pedido.direccionDt.direccion;
 		const reprogramacion = new EnviosReprogramaciones();
 		reprogramacion.direccion = direccion;
 		reprogramacion.motivo = motivo;

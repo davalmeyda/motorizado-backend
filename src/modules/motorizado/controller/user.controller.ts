@@ -58,9 +58,7 @@ export class UserController {
 
 		const authUser = await this.userService.login(UserDto);
 
-		if (authUser != 0) {
-			// Si el inicio de sesión es exitoso, devuelve un JSON de respuesta
-
+		if (authUser) {
 			const statusCode = HttpStatus.ACCEPTED;
 			return customResponse('Usuario', authUser, statusCode);
 		} else {

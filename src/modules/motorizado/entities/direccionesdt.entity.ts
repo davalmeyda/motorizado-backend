@@ -23,4 +23,13 @@ export class DireccionDT {
 
 	@Column()
 	cantidad: number;
+
+	@Column()
+	recibido: number;
+
+	@Column()
+	entregado: number;
+
+	@Column()
+	confirmado: number;
 }

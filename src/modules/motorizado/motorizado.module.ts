@@ -19,6 +19,7 @@ import { ImagenEnvio } from './entities/imagenEnvios.entity';
 import { ImagenReprogramadoService } from './services/imagenReprogramados.service';
 import { ImagenReprogramado } from './entities/imagenReprogramado.entity';
 import { EnviosReprogramaciones } from './entities/enviosReprogramaciones.entity';
+import { DireccionDetalleImagenes } from './entities/direccionDetalleImagenes.entity';
 
 @Module({
 	imports: [
@@ -34,6 +35,7 @@ import { EnviosReprogramaciones } from './entities/enviosReprogramaciones.entity
 			ImagenEnvio,
 			EnviosReprogramaciones,
 			ImagenReprogramado,
+			DireccionDetalleImagenes,
 		]),
 	],
 	providers: [

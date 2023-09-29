@@ -60,8 +60,8 @@ export class PedidoController {
 
 	@Get(':id')
 	@ApiOperation({ summary: 'Buscar pedido por id' })
-	async findOne(@Param('id') cod: string) {
-		const response = await this.pedidoService.findOne(cod);
+	async findOneToDeliver(@Param('id') cod: string) {
+		const response = await this.pedidoService.findOneToDeliver(cod);
 		return customResponse('pedidos', response);
 	}
 
@@ -98,14 +98,19 @@ export class PedidoController {
 		@UploadedFile() file: Express.Multer.File,
 	) {
 		if (file) {
-			const pedido = await this.pedidoService.findOne(codigo);
-			if (pedido) {
+			const direccion = await this.pedidoService.findOne(codigo);
+			if (direccion) {
 				if (!user_id) throw new NotFoundException('Debe tener el id del usuario');
-				if (pedido.pedido.direccionDt.direccion.id_motorizado !== parseInt(user_id, 10))
+				if (direccion.direccion.id_motorizado !== parseInt(user_id, 10))
 					throw new NotFoundException('No se encontraron coincidencias para el usuario');
 				let pathImg = '';
 				pathImg = pathFile(file);
-				await this.imagenEnviosService.create(pedido.pedido, pathImg, parseInt(user_id, 10));
+				// TODO: agregar relacion de muchos a muchos
+				await this.imagenEnviosService.create(
+					direccion.direccion.id,
+					pathImg,
+					parseInt(user_id, 10),
+				);
 				let response = {};
 				const resImg = pathImg !== '' ? { url_imagen: pathImg } : {};
 				response = Object.assign(resImg);
@@ -118,24 +123,20 @@ export class PedidoController {
 		}
 	}
 
-	@Put('reprogramar/:codigo')
+	@Put('reprogramar/:id')
 	@ApiOperation({
 		summary: 'Cambiar estado de reprogramado al pedido y registrar una reprogramacion',
 	})
 	async createReprogramar(
-		@Param('codigo') codigo: string,
+		@Param('id') id: string,
 		@Query('idUser') idUser: string,
 		@Query('motivo') motivo: string,
 	) {
-		const response = await this.pedidoService.createReprogramar(
-			codigo,
-			parseInt(idUser, 10),
-			motivo,
-		);
+		const response = await this.pedidoService.createReprogramar(id, parseInt(idUser, 10), motivo);
 		return customResponse('pedidos', response);
 	}
 
-	@Put('/imagenReprogramacion/:codigo/')
+	@Put('/imagenReprogramacion/:id/')
 	@ApiOperation({ summary: 'Subir archivos de reprogramacion' })
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(
@@ -145,18 +146,18 @@ export class PedidoController {
 	)
 	@ApiBody({ type: ImagenEnvioDto })
 	async uploadArchivosReprogramados(
-		@Param('codigo') codigo: string,
+		@Param('id') id: string,
 		@Query('user_id') user_id: string,
 		@Query('reprogramacion_id') reprogramacion_id: string,
 		@UploadedFile() file: Express.Multer.File,
 	) {
 		if (file) {
-			const pedido = await this.pedidoService.findOne(codigo);
-			if (pedido) {
+			const direccion = await this.pedidoService.findOneDireccion(id);
+			if (direccion) {
 				if (!reprogramacion_id)
 					throw new NotFoundException('Debe tener el id de la reprogramacion');
 				if (!user_id) throw new NotFoundException('Debe tener el id del usuario');
-				if (pedido.pedido.direccionDt.direccion.id_motorizado !== parseInt(user_id, 10))
+				if (direccion.direccion.id_motorizado !== parseInt(user_id, 10))
 					throw new NotFoundException('No se encontraron coincidencias para el usuario');
 				let pathImg = '';
 				pathImg = pathFile(file);
