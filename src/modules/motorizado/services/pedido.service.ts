@@ -119,6 +119,12 @@ export class PedidoService {
 				});
 			}
 		});
+		const arrNoRepetidos = [];
+		arrDirecciones.forEach(direccion => {
+			if (!arrNoRepetidos.find(dir => dir.id === direccion.id)) {
+				arrNoRepetidos.push(direccion);
+			}
+		});
 		return [arrDirecciones, arrDirecciones.length];
 	}
 
