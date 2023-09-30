@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { DireccionDT } from './direccionesdt.entity';
 import { EnviosReprogramaciones } from './enviosReprogramaciones.entity';
+import { EnviosRechazados } from './enviosRechazados.entity';
 
 @Entity({ name: 'direcciones_sobres' })
 export class Direccion {
@@ -53,10 +54,16 @@ export class Direccion {
 	google_maps: string;
 
 	@Column()
+	empresa_transporte: string;
+
+	@Column()
 	estado: number;
 
 	@Column()
 	importe: string;
+
+	@Column()
+	forma_pago: string;
 
 	@Column()
 	recibido: number;
@@ -78,4 +85,7 @@ export class Direccion {
 
 	@OneToMany(() => EnviosReprogramaciones, model => model.direccion)
 	reprogramaciones: EnviosReprogramaciones[];
+
+	@OneToMany(() => EnviosRechazados, model => model.direccion)
+	noEntregados: EnviosRechazados[];
 }

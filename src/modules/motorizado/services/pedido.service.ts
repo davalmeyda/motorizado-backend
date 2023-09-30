@@ -9,6 +9,16 @@ import { Ubicacion } from '../entities/ubicaciones.entity';
 import { Agencia } from '../entities/agencias.entity';
 import { EnviosReprogramaciones } from '../entities/enviosReprogramaciones.entity';
 import { DireccionDT } from '../entities/direccionesdt.entity';
+import { EnviosRechazados } from '../entities/enviosRechazados.entity';
+
+const CONFIRM_MOTORIZADO_INT = 16;
+const CONFIRM_MOTORIZADO = 'PRE* ENTREGADO A CLIENTE - MOTORIZADO';
+
+const EN_AGENCIA_COURIER_INT = 42;
+const EN_AGENCIA_COURIER = 'EN AGENCIA - COURIER';
+
+const PRE_ENTREGADO_PARCIAL_INT = 44;
+const PRE_ENTREGADO_PARCIAL = 'PRE ENTREGADO PARCIAL - COURIER';
 
 @Injectable()
 export class PedidoService {
@@ -21,6 +31,8 @@ export class PedidoService {
 		@InjectRepository(Agencia) private readonly agenciaRespository: Repository<Agencia>,
 		@InjectRepository(EnviosReprogramaciones)
 		private readonly enviosReprogramacionRespository: Repository<EnviosReprogramaciones>,
+		@InjectRepository(EnviosRechazados)
+		private readonly enviosRechazadosRespository: Repository<EnviosRechazados>,
 	) {}
 
 	findAll(search: string) {
@@ -79,7 +91,7 @@ export class PedidoService {
 			],
 		};
 		const respDirecciones = await this.direccionRespository.findAndCount({
-			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones', 'noEntregados'],
 			where: [
 				{
 					id_ubicacion: 1,
@@ -99,11 +111,13 @@ export class PedidoService {
 		});
 		const arrDirecciones = [];
 		respDirecciones[0].forEach(direccion => {
-			direccion.direciones.forEach(dir => {
-				if (dir.entregado !== 1 && dir.recibido === 1) {
-					arrDirecciones.push(direccion);
-				}
-			});
+			if (direccion.noEntregados.length === 0) {
+				direccion.direciones.forEach(dir => {
+					if (dir.entregado !== 1 && dir.recibido === 1) {
+						arrDirecciones.push(direccion);
+					}
+				});
+			}
 		});
 		return [arrDirecciones, arrDirecciones.length];
 	}
@@ -235,7 +249,10 @@ export class PedidoService {
 					condicion_envio_code: 20,
 				},
 			);
-			await this.direccionDtRespository.update({ id: pedido.direccionDt.id }, { recibido: 1 });
+			await this.direccionDtRespository.update(
+				{ id: pedido.direccionDt.id },
+				{ recibido: 1, fecha_recibido: new Date() },
+			);
 		}
 
 		// * Cambiar estado de la direccion solo cuando todos los pedidos hayan sido entregados
@@ -263,7 +280,12 @@ export class PedidoService {
 		});
 	}
 
-	async changeStatusEntregado(codigo: string, idUser: number, importe: string = '0') {
+	async changeStatusEntregado(
+		codigo: string,
+		idUser: number,
+		importe: string = '0',
+		forma_pago: string = '0',
+	) {
 		if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
 		if (!importe) throw new NotFoundException('Debe tener un importe');
 		const pedido = await this.pedidoRespository.findOne({
@@ -273,11 +295,13 @@ export class PedidoService {
 		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		const id = pedido.direccionDt.direccion.id;
 
+		const isLima = pedido.direccionDt.direccion.id_ubicacion === 1;
+
 		await this.pedidoRespository.update(
 			{ id: pedido.id },
 			{
-				condicion_envio: 'PRE ENTREGADO - CLIENTE',
-				condicion_envio_code: 16,
+				condicion_envio: isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER,
+				condicion_envio_code: isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT,
 			},
 		);
 
@@ -290,7 +314,7 @@ export class PedidoService {
 			if (pedidoCambiar.direccionDt.recibido === 1) {
 				await this.direccionDtRespository.update(
 					{ id: pedidoCambiar.direccionDt.id },
-					{ entregado: 1 },
+					{ entregado: 1, fecha_entregado: new Date() },
 				);
 			}
 		}
@@ -305,15 +329,26 @@ export class PedidoService {
 		if (pedidos.length === entregados.length) {
 			await this.direccionRespository.update(
 				{ id },
-				{ entregado: 2, importe, estado_dir: 'PRE ENTREGADO - CLIENTE', estado_dir_code: 16 },
+				{
+					entregado: 2,
+					importe,
+					forma_pago,
+					estado_dir: isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER,
+					estado_dir_code: isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT,
+				},
 			);
 		} else {
 			await this.direccionRespository.update(
 				{ id },
-				{ entregado: 1, importe, estado_dir: 'PRE ENTREGADO - CLIENTE', estado_dir_code: 16 },
+				{
+					entregado: 1,
+					importe,
+					forma_pago,
+					estado_dir: PRE_ENTREGADO_PARCIAL,
+					estado_dir_code: PRE_ENTREGADO_PARCIAL_INT,
+				},
 			);
 		}
-		console.log(id);
 		return this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: { id },
@@ -336,5 +371,23 @@ export class PedidoService {
 		reprogramacion.user_id = idUser;
 		reprogramacion.created_at = new Date();
 		return this.enviosReprogramacionRespository.save(reprogramacion);
+	}
+
+	async createRechazar(id: string, idUser: number, motivo: string) {
+		if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
+		if (!motivo) throw new NotFoundException('Debe tener un motivo');
+		const direccion = await this.direccionRespository.findOne({
+			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+			where: { id: parseInt(id, 10) },
+		});
+		if (!direccion) throw new NotFoundException('No se encontro la direccion');
+		if (direccion.id_motorizado !== idUser)
+			throw new NotFoundException('No puede reprogramar el pedido');
+		const rechazado = new EnviosRechazados();
+		rechazado.direccion = direccion;
+		rechazado.motivo = motivo;
+		rechazado.user_id = idUser;
+		rechazado.created_at = new Date();
+		return this.enviosRechazadosRespository.save(rechazado);
 	}
 }

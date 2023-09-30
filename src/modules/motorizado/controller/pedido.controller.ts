@@ -20,6 +20,7 @@ import { pathFile } from 'src/utils/pathFile';
 import { constantes } from 'src/common/constantes';
 import { ImagenEnviosService } from '../services/imagenEnvios.service';
 import { ImagenReprogramadoService } from '../services/imagenReprogramados.service';
+import { ImagenRechazadosService } from '../services/imagenRechazados.service';
 
 @Controller('pedido')
 @ApiTags('Pedido')
@@ -28,6 +29,7 @@ export class PedidoController {
 		private readonly pedidoService: PedidoService,
 		private readonly imagenEnviosService: ImagenEnviosService,
 		private readonly imagenReprogramadosService: ImagenReprogramadoService,
+		private readonly imagenRechazadosService: ImagenRechazadosService,
 	) {}
 
 	@Get()
@@ -78,8 +80,14 @@ export class PedidoController {
 		@Param('codigo') codigo: string,
 		@Query('idUser') idUser: number,
 		@Query('importe') importe: string,
+		@Query('forma_pago') forma_pago: string,
 	) {
-		const response = await this.pedidoService.changeStatusEntregado(codigo, idUser, importe);
+		const response = await this.pedidoService.changeStatusEntregado(
+			codigo,
+			idUser,
+			importe,
+			forma_pago,
+		);
 		return customResponse('pedidos', response);
 	}
 
@@ -163,6 +171,60 @@ export class PedidoController {
 				pathImg = pathFile(file);
 				await this.imagenReprogramadosService.create(
 					parseInt(reprogramacion_id, 10),
+					pathImg,
+					file.filename,
+				);
+				let response = {};
+				const resImg = pathImg !== '' ? { url_imagen: pathImg } : {};
+				response = Object.assign(resImg);
+
+				return customResponse('Imagen subida', response);
+			}
+			throw new NotFoundException('No se encontraron coincidencias');
+		} else {
+			throw new NotFoundException('Se necesita al menos un archivo');
+		}
+	}
+
+	@Put('rechazar/:id')
+	@ApiOperation({
+		summary: 'Cambiar estado de rechazados al pedido y registrar un registro de no entregado',
+	})
+	async createRechazar(
+		@Param('id') id: string,
+		@Query('idUser') idUser: string,
+		@Query('motivo') motivo: string,
+	) {
+		const response = await this.pedidoService.createRechazar(id, parseInt(idUser, 10), motivo);
+		return customResponse('pedidos', response);
+	}
+
+	@Put('/imagenRechazar/:id/')
+	@ApiOperation({ summary: 'Subir archivos de rechazados' })
+	@ApiConsumes('multipart/form-data')
+	@UseInterceptors(
+		FileInterceptor('imagen', {
+			dest: constantes.pathFile + 'rechazado',
+		}),
+	)
+	@ApiBody({ type: ImagenEnvioDto })
+	async uploadArchivosRechazar(
+		@Param('id') id: string,
+		@Query('user_id') user_id: string,
+		@Query('rechazado_id') rechazado_id: string,
+		@UploadedFile() file: Express.Multer.File,
+	) {
+		if (file) {
+			const direccion = await this.pedidoService.findOneDireccion(id);
+			if (direccion) {
+				if (!rechazado_id) throw new NotFoundException('Debe tener el id del rechazo');
+				if (!user_id) throw new NotFoundException('Debe tener el id del usuario');
+				if (direccion.direccion.id_motorizado !== parseInt(user_id, 10))
+					throw new NotFoundException('No se encontraron coincidencias para el usuario');
+				let pathImg = '';
+				pathImg = pathFile(file);
+				await this.imagenRechazadosService.create(
+					parseInt(rechazado_id, 10),
 					pathImg,
 					file.filename,
 				);

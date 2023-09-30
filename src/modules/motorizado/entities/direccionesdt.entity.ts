@@ -27,9 +27,18 @@ export class DireccionDT {
 	@Column()
 	recibido: number;
 
+	@Column({ nullable: true })
+	fecha_recibido: Date;
+
 	@Column()
 	entregado: number;
 
+	@Column({ nullable: true })
+	fecha_entregado: Date;
+
 	@Column()
 	confirmado: number;
+
+	@Column({ nullable: true })
+	fecha_confirmado: Date;
 }

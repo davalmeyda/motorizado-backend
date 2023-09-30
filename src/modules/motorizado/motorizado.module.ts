@@ -20,6 +20,9 @@ import { ImagenReprogramadoService } from './services/imagenReprogramados.servic
 import { ImagenReprogramado } from './entities/imagenReprogramado.entity';
 import { EnviosReprogramaciones } from './entities/enviosReprogramaciones.entity';
 import { DireccionDetalleImagenes } from './entities/direccionDetalleImagenes.entity';
+import { EnviosRechazados } from './entities/enviosRechazados.entity';
+import { ImagenRechazado } from './entities/imagenRechazado.entity';
+import { ImagenRechazadosService } from './services/imagenRechazados.service';
 
 @Module({
 	imports: [
@@ -36,6 +39,8 @@ import { DireccionDetalleImagenes } from './entities/direccionDetalleImagenes.en
 			EnviosReprogramaciones,
 			ImagenReprogramado,
 			DireccionDetalleImagenes,
+			EnviosRechazados,
+			ImagenRechazado,
 		]),
 	],
 	providers: [
@@ -44,6 +49,7 @@ import { DireccionDetalleImagenes } from './entities/direccionDetalleImagenes.en
 		PedidoService,
 		ImagenEnviosService,
 		ImagenReprogramadoService,
+		ImagenRechazadosService,
 	],
 	controllers: [RolController, UserController, PedidoController],
 })
