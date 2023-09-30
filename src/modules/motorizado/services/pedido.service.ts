@@ -121,7 +121,7 @@ export class PedidoService {
 		});
 		const arrNoRepetidos = [];
 		arrDirecciones.forEach(direccion => {
-			if (!arrNoRepetidos.find(dir => dir.id === direccion.id)) {
+			if (arrNoRepetidos.findIndex(dir => dir.id === direccion.id) === -1) {
 				arrNoRepetidos.push(direccion);
 			}
 		});
