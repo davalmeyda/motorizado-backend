@@ -125,7 +125,7 @@ export class PedidoService {
 				arrNoRepetidos.push(direccion);
 			}
 		});
-		return [arrDirecciones, arrDirecciones.length];
+		return [arrNoRepetidos, arrNoRepetidos.length];
 	}
 
 	async findOne(cod: string) {
