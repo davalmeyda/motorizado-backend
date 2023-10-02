@@ -187,15 +187,25 @@ export class PedidoService {
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
-		const cliente = await this.clienteRespository.findOne({
-			where: { id: direccion.id_cliente },
-		});
-		const ubicacion = await this.ubicacionRespository.findOne({
-			where: { id: direccion.id_ubicacion },
-		});
-		const agencia = await this.agenciaRespository.findOne({
-			where: { id: direccion.id_agencia },
-		});
+
+		let cliente;
+		if (direccion.id_cliente !== null) {
+			cliente = await this.clienteRespository.findOne({
+				where: { id: direccion.id_cliente },
+			});
+		}
+		let ubicacion;
+		if (direccion.id_ubicacion !== null) {
+			ubicacion = await this.ubicacionRespository.findOne({
+				where: { id: direccion.id_ubicacion },
+			});
+		}
+		let agencia;
+		if (direccion.id_agencia !== null) {
+			agencia = await this.agenciaRespository.findOne({
+				where: { id: direccion.id_agencia },
+			});
+		}
 
 		const direccionConPedidos = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
