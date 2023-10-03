@@ -93,8 +93,8 @@ export class PedidoService {
 			}
 			arrDireccionesResp.push({
 				...direccion,
-				agencia: agencia?.nombre_agencia || null,
-				ubicacion: ubicacion?.nombre_ubicacion || null,
+				agencia: agencia?.nombre_agencia,
+				ubicacion: ubicacion?.nombre_ubicacion,
 			});
 		}
 		return [arrDireccionesResp, arrDireccionesResp.length];
@@ -163,8 +163,8 @@ export class PedidoService {
 			}
 			arrDireccionesResp.push({
 				...direccion,
-				agencia: agencia?.nombre_agencia || null,
-				ubicacion: ubicacion?.nombre_ubicacion || null,
+				agencia: agencia?.nombre_agencia,
+				ubicacion: ubicacion?.nombre_ubicacion,
 			});
 		}
 		return [arrDireccionesResp, arrDireccionesResp.length];
