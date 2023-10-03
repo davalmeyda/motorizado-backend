@@ -73,10 +73,31 @@ export class PedidoService {
 				direciones: direcciones,
 			},
 		];
-		return this.direccionRespository.findAndCount({
+		const resp = await this.direccionRespository.findAndCount({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where,
 		});
+		const arrDireccionesResp = [];
+		for (const direccion of resp[0]) {
+			let ubicacion: Ubicacion = null;
+			let agencia: Agencia = null;
+			if (direccion.id_ubicacion) {
+				ubicacion = await this.ubicacionRespository.findOne({
+					where: { id: direccion.id_ubicacion },
+				});
+			}
+			if (direccion.id_agencia) {
+				agencia = await this.agenciaRespository.findOne({
+					where: { id: direccion.id_agencia },
+				});
+			}
+			arrDireccionesResp.push({
+				...direccion,
+				agencia: agencia?.nombre_agencia,
+				ubicacion: ubicacion?.nombre_ubicacion,
+			});
+		}
+		return [arrDireccionesResp, arrDireccionesResp.length];
 	}
 
 	async findAllRecibidos(search: string, idUser: number) {
@@ -125,7 +146,28 @@ export class PedidoService {
 				arrNoRepetidos.push(direccion);
 			}
 		});
-		return [arrNoRepetidos, arrNoRepetidos.length];
+
+		const arrDireccionesResp = [];
+		for (const direccion of arrNoRepetidos) {
+			let ubicacion: Ubicacion = null;
+			let agencia: Agencia = null;
+			if (direccion.id_ubicacion) {
+				ubicacion = await this.ubicacionRespository.findOne({
+					where: { id: direccion.id_ubicacion },
+				});
+			}
+			if (direccion.id_agencia) {
+				agencia = await this.agenciaRespository.findOne({
+					where: { id: direccion.id_agencia },
+				});
+			}
+			arrDireccionesResp.push({
+				...direccion,
+				agencia: agencia?.nombre_agencia,
+				ubicacion: ubicacion?.nombre_ubicacion,
+			});
+		}
+		return [arrDireccionesResp, arrDireccionesResp.length];
 	}
 
 	async findOne(cod: string) {
@@ -187,15 +229,25 @@ export class PedidoService {
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
-		const cliente = await this.clienteRespository.findOne({
-			where: { id: direccion.id_cliente },
-		});
-		const ubicacion = await this.ubicacionRespository.findOne({
-			where: { id: direccion.id_ubicacion },
-		});
-		const agencia = await this.agenciaRespository.findOne({
-			where: { id: direccion.id_agencia },
-		});
+
+		let cliente;
+		if (direccion.id_cliente !== null) {
+			cliente = await this.clienteRespository.findOne({
+				where: { id: direccion.id_cliente },
+			});
+		}
+		let ubicacion;
+		if (direccion.id_ubicacion !== null) {
+			ubicacion = await this.ubicacionRespository.findOne({
+				where: { id: direccion.id_ubicacion },
+			});
+		}
+		let agencia;
+		if (direccion.id_agencia !== null) {
+			agencia = await this.agenciaRespository.findOne({
+				where: { id: direccion.id_agencia },
+			});
+		}
 
 		const direccionConPedidos = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
