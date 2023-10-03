@@ -73,10 +73,31 @@ export class PedidoService {
 				direciones: direcciones,
 			},
 		];
-		return this.direccionRespository.findAndCount({
+		const resp = await this.direccionRespository.findAndCount({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where,
 		});
+		const arrDireccionesResp = [];
+		for (const direccion of resp[0]) {
+			let ubicacion: Ubicacion = null;
+			let agencia: Agencia = null;
+			if (direccion.id_ubicacion) {
+				ubicacion = await this.ubicacionRespository.findOne({
+					where: { id: direccion.id_ubicacion },
+				});
+			}
+			if (direccion.id_agencia) {
+				agencia = await this.agenciaRespository.findOne({
+					where: { id: direccion.id_agencia },
+				});
+			}
+			arrDireccionesResp.push({
+				...direccion,
+				agencia: agencia?.nombre_agencia || null,
+				ubicacion: ubicacion?.nombre_ubicacion || null,
+			});
+		}
+		return [arrDireccionesResp, arrDireccionesResp.length];
 	}
 
 	async findAllRecibidos(search: string, idUser: number) {
@@ -125,7 +146,28 @@ export class PedidoService {
 				arrNoRepetidos.push(direccion);
 			}
 		});
-		return [arrNoRepetidos, arrNoRepetidos.length];
+
+		const arrDireccionesResp = [];
+		for (const direccion of arrNoRepetidos) {
+			let ubicacion: Ubicacion = null;
+			let agencia: Agencia = null;
+			if (direccion.id_ubicacion) {
+				ubicacion = await this.ubicacionRespository.findOne({
+					where: { id: direccion.id_ubicacion },
+				});
+			}
+			if (direccion.id_agencia) {
+				agencia = await this.agenciaRespository.findOne({
+					where: { id: direccion.id_agencia },
+				});
+			}
+			arrDireccionesResp.push({
+				...direccion,
+				agencia: agencia?.nombre_agencia || null,
+				ubicacion: ubicacion?.nombre_ubicacion || null,
+			});
+		}
+		return [arrDireccionesResp, arrDireccionesResp.length];
 	}
 
 	async findOne(cod: string) {
