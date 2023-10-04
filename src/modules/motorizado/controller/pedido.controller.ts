@@ -91,7 +91,7 @@ export class PedidoController {
 		return customResponse('pedidos', response);
 	}
 
-	@Put('/imagenDespacho/:codigo/')
+	@Put('/imagenDespacho/:idDireccion/')
 	@ApiOperation({ summary: 'Subir archivos de envio' })
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(
@@ -101,19 +101,19 @@ export class PedidoController {
 	)
 	@ApiBody({ type: ImagenEnvioDto })
 	async uploadArchivos(
-		@Param('codigo') codigo: string,
+		@Param('idDireccion') idDireccion: string,
 		@Query('user_id') user_id: string,
 		@UploadedFile() file: Express.Multer.File,
 	) {
 		if (file) {
-			const direccion = await this.pedidoService.findOne(codigo);
+			const direccion = await this.pedidoService.findOneDireccion(idDireccion);
 			if (direccion) {
 				if (!user_id) throw new NotFoundException('Debe tener el id del usuario');
 				if (direccion.direccion.id_motorizado !== parseInt(user_id, 10))
 					throw new NotFoundException('No se encontraron coincidencias para el usuario');
 				let pathImg = '';
 				pathImg = pathFile(file);
-				// TODO: agregar relacion de muchos a muchos
+
 				await this.imagenEnviosService.create(
 					direccion.direccion.id,
 					pathImg,
