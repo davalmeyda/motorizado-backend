@@ -20,6 +20,12 @@ const EN_AGENCIA_COURIER = 'EN AGENCIA - COURIER';
 const PRE_ENTREGADO_PARCIAL_INT = 44;
 const PRE_ENTREGADO_PARCIAL = 'PRE ENTREGADO PARCIAL - COURIER';
 
+const ENVIO_NO_ENTREGADO_INT = 45;
+const ENVIO_NO_ENTREGADO = 'NO ENTREGADO - COURIER';
+
+const ENVIO_REPROGRAMADO_INT = 46;
+const ENVIO_REPROGRAMADO = 'PEDIDO REPROGRAMADO';
+
 @Injectable()
 export class PedidoService {
 	constructor(
@@ -423,6 +429,26 @@ export class PedidoService {
 		if (!direccion) throw new NotFoundException('No se encontro la direccion');
 		if (direccion.id_motorizado !== idUser)
 			throw new NotFoundException('No puede reprogramar el pedido');
+
+		const pedidos = direccion.direciones;
+		for (const pedido of pedidos) {
+			await this.pedidoRespository.update(
+				{ id: pedido.id },
+				{
+					condicion_envio: ENVIO_REPROGRAMADO,
+					condicion_envio_code: ENVIO_REPROGRAMADO_INT,
+				},
+			);
+		}
+
+		await this.direccionRespository.update(
+			{ id: direccion.id },
+			{
+				estado_dir: ENVIO_REPROGRAMADO,
+				estado_dir_code: ENVIO_REPROGRAMADO_INT,
+			},
+		);
+
 		const reprogramacion = new EnviosReprogramaciones();
 		reprogramacion.direccion = direccion;
 		reprogramacion.motivo = motivo;
@@ -441,6 +467,26 @@ export class PedidoService {
 		if (!direccion) throw new NotFoundException('No se encontro la direccion');
 		if (direccion.id_motorizado !== idUser)
 			throw new NotFoundException('No puede reprogramar el pedido');
+
+		const pedidos = direccion.direciones;
+		for (const pedido of pedidos) {
+			await this.pedidoRespository.update(
+				{ id: pedido.id },
+				{
+					condicion_envio: ENVIO_NO_ENTREGADO,
+					condicion_envio_code: ENVIO_NO_ENTREGADO_INT,
+				},
+			);
+		}
+
+		await this.direccionRespository.update(
+			{ id: direccion.id },
+			{
+				estado_dir: ENVIO_NO_ENTREGADO,
+				estado_dir_code: ENVIO_NO_ENTREGADO_INT,
+			},
+		);
+
 		const rechazado = new EnviosRechazados();
 		rechazado.direccion = direccion;
 		rechazado.motivo = motivo;
