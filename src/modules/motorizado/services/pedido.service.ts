@@ -433,7 +433,7 @@ export class PedidoService {
 		const pedidos = direccion.direciones;
 		for (const pedido of pedidos) {
 			await this.pedidoRespository.update(
-				{ id: pedido.id },
+				{ id: pedido.pedido.id },
 				{
 					condicion_envio: ENVIO_REPROGRAMADO,
 					condicion_envio_code: ENVIO_REPROGRAMADO_INT,
@@ -471,7 +471,7 @@ export class PedidoService {
 		const pedidos = direccion.direciones;
 		for (const pedido of pedidos) {
 			await this.pedidoRespository.update(
-				{ id: pedido.id },
+				{ id: pedido.pedido.id },
 				{
 					condicion_envio: ENVIO_NO_ENTREGADO,
 					condicion_envio_code: ENVIO_NO_ENTREGADO_INT,
