@@ -12,6 +12,14 @@ export class ImagenEnviosService {
 		private readonly direccionDetalleImagenesRespository: Repository<DireccionDetalleImagenes>,
 	) {}
 
+	async findAllByDirección(idDireccion: number) {
+		return await this.imagenEnvioRespository.find({
+			where: {
+				direccion_id: idDireccion,
+			},
+		});
+	}
+
 	async create(direccion_id: number, url: string, user_id: number = null) {
 		const imagen: ImagenEnvio = new ImagenEnvio();
 		imagen.url_imagen = url;

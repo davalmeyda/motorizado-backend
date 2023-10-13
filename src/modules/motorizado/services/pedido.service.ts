@@ -10,6 +10,7 @@ import { Agencia } from '../entities/agencias.entity';
 import { EnviosReprogramaciones } from '../entities/enviosReprogramaciones.entity';
 import { DireccionDT } from '../entities/direccionesdt.entity';
 import { EnviosRechazados } from '../entities/enviosRechazados.entity';
+import { ImagenEnviosService } from './imagenEnvios.service';
 
 const CONFIRM_MOTORIZADO_INT = 16;
 const CONFIRM_MOTORIZADO = 'PRE* ENTREGADO A CLIENTE - MOTORIZADO';
@@ -39,6 +40,7 @@ export class PedidoService {
 		private readonly enviosReprogramacionRespository: Repository<EnviosReprogramaciones>,
 		@InjectRepository(EnviosRechazados)
 		private readonly enviosRechazadosRespository: Repository<EnviosRechazados>,
+		private readonly imagenEnviosService: ImagenEnviosService,
 	) {}
 
 	findAll(search: string) {
@@ -367,6 +369,10 @@ export class PedidoService {
 		});
 		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		const id = pedido.direccionDt.direccion.id;
+
+		const isValidFotos = await this.imagenEnviosService.findAllByDirección(id);
+		if (!isValidFotos || isValidFotos.length === 0)
+			throw new NotFoundException('Ocurrió un error al subir las fotos del pedido');
 
 		const isLima = pedido.direccionDt.direccion.id_ubicacion === 1;
 
