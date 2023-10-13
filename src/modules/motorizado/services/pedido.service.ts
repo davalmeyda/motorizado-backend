@@ -54,9 +54,10 @@ export class PedidoService {
 								correlativo: ILike('%' + (search || '') + '%'),
 							},
 							{
-								codigo: ILike('%' + (search || '') + '%'),
+								codigo: ILike('%' + (search || '')),
 							},
 						],
+						eliminado: 0,
 					},
 				},
 			],
@@ -70,9 +71,10 @@ export class PedidoService {
 					correlativo: ILike('%' + (search || '') + '%'),
 				},
 				{
-					codigo: ILike('%' + (search || '') + '%'),
+					codigo: ILike('%' + (search || '')),
 				},
 			],
+			eliminado: 0,
 		};
 		const where: FindOptionsWhere<Direccion>[] = [
 			{
@@ -113,11 +115,14 @@ export class PedidoService {
 			pedido: [
 				{
 					correlativo: ILike('%' + (search || '') + '%'),
+					eliminado: 0,
 				},
 				{
-					codigo: ILike('%' + (search || '') + '%'),
+					codigo: ILike('%' + (search || '')),
+					eliminado: 0,
 				},
 			],
+			eliminado: 0,
 		};
 		const respDirecciones = await this.direccionRespository.findAndCount({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones', 'noEntregados'],
@@ -182,7 +187,7 @@ export class PedidoService {
 		const direccion = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: {
-				direciones: { pedido: { codigo: cod } },
+				direciones: { pedido: { codigo: cod }, eliminado: 0 },
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
@@ -204,6 +209,7 @@ export class PedidoService {
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: {
 				id: parseInt(id, 10),
+				direciones: { eliminado: 0 },
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
@@ -223,7 +229,7 @@ export class PedidoService {
 	async findOneToDeliver(cod: string) {
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
-			where: { codigo: cod },
+			where: { codigo: cod, direccionDt: { eliminado: 0 } },
 		});
 		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
@@ -233,7 +239,7 @@ export class PedidoService {
 		const direccion = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: {
-				direciones: { pedido: { codigo: cod } },
+				direciones: { pedido: { codigo: cod }, eliminado: 0 },
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
@@ -263,6 +269,7 @@ export class PedidoService {
 				id: direccion.id,
 				direciones: {
 					recibido: Not(0),
+					eliminado: 0,
 				},
 			},
 		});
@@ -276,6 +283,7 @@ export class PedidoService {
 			where: [
 				{
 					codigo: cod,
+					direccionDt: { eliminado: 0 },
 				},
 			],
 		});
@@ -292,7 +300,7 @@ export class PedidoService {
 	async changeStatus(codigosDto: CodigosDto) {
 		const pedidos = await this.pedidoRespository.find({
 			relations: ['direccionDt', 'direccionDt.direccion'],
-			where: { codigo: In(codigosDto.codigos) },
+			where: { codigo: In(codigosDto.codigos), direccionDt: { eliminado: 0 } },
 		});
 		if (!pedidos || pedidos.length === 0)
 			throw new NotFoundException('No se encontraron pedidos con los codigos enviados');
@@ -365,7 +373,7 @@ export class PedidoService {
 		if (!importe) throw new NotFoundException('Debe tener un importe');
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion'],
-			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
+			where: { codigo, direccionDt: { direccion: { id_motorizado: idUser }, eliminado: 0 } },
 		});
 		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		const id = pedido.direccionDt.direccion.id;
@@ -386,7 +394,7 @@ export class PedidoService {
 
 		const cambiarPedidos = await this.pedidoRespository.find({
 			relations: ['direccionDt', 'direccionDt.direccion'],
-			where: { direccionDt: { direccion: { id } } },
+			where: { direccionDt: { direccion: { id }, eliminado: 0 } },
 		});
 
 		for (const pedidoCambiar of cambiarPedidos) {
@@ -400,7 +408,7 @@ export class PedidoService {
 
 		const pedidos = await this.pedidoRespository.find({
 			relations: ['direccionDt', 'direccionDt.direccion'],
-			where: { direccionDt: { direccion: { id } } },
+			where: { direccionDt: { direccion: { id }, eliminado: 0 } },
 		});
 
 		const entregados = pedidos.filter(p => p.direccionDt.entregado === 1);
@@ -439,7 +447,7 @@ export class PedidoService {
 		if (!motivo) throw new NotFoundException('Debe tener un motivo');
 		const direccion = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
-			where: { id: parseInt(id, 10) },
+			where: { id: parseInt(id, 10), direciones: { eliminado: 0 } },
 		});
 		if (!direccion) throw new NotFoundException('No se encontro la direccion');
 		if (direccion.id_motorizado !== idUser)
@@ -477,7 +485,7 @@ export class PedidoService {
 		if (!motivo) throw new NotFoundException('Debe tener un motivo');
 		const direccion = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
-			where: { id: parseInt(id, 10) },
+			where: { id: parseInt(id, 10), direciones: { eliminado: 0 } },
 		});
 		if (!direccion) throw new NotFoundException('No se encontro la direccion');
 		if (direccion.id_motorizado !== idUser)

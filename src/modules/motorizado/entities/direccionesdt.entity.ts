@@ -33,6 +33,9 @@ export class DireccionDT {
 	@Column()
 	entregado: number;
 
+	@Column({ default: 0 })
+	eliminado: number;
+
 	@Column({ nullable: true })
 	fecha_entregado: Date;
 
