@@ -280,6 +280,8 @@ export class PedidoService {
 		if (!pedido) throw new NotFoundException('No se encontró el codigo');
 		if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
 		if (!pedido.direccionDt.direccion) throw new NotFoundException('No tiene dirección');
+		if (!pedido.direccionDt.direccion.id_motorizado)
+			throw new NotFoundException('No tiene permisos para acceder a este pedido');
 		if (pedido.direccionDt.direccion.id_motorizado !== parseInt(idUser, 10))
 			throw new NotFoundException('No tiene permisos para acceder a este pedido');
 		return pedido;
@@ -295,7 +297,8 @@ export class PedidoService {
 		const ids = [];
 		pedidos
 			.filter(p => (p.direccionDt ? true : false))
-			.filter(p => p.direccionDt.direccion.id_motorizado === codigosDto.idUser)
+			.filter(p => (p.direccionDt.direccion ? true : false))
+			.filter(p => p.direccionDt?.direccion?.id_motorizado === codigosDto.idUser)
 			.forEach(pedido => {
 				ids.push(pedido.direccionDt.direccion.id);
 			});
