@@ -180,7 +180,7 @@ export class PedidoService {
 		const direccion = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: {
-				direciones: { pedido: { codigo: ILike(cod) } },
+				direciones: { pedido: { codigo: cod } },
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
@@ -221,7 +221,7 @@ export class PedidoService {
 	async findOneToDeliver(cod: string) {
 		const pedido = await this.pedidoRespository.findOne({
 			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
-			where: { codigo: ILike(cod) },
+			where: { codigo: cod },
 		});
 		if (!pedido) throw new NotFoundException('No se encontro el pedido');
 		if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
@@ -231,7 +231,7 @@ export class PedidoService {
 		const direccion = await this.direccionRespository.findOne({
 			relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
 			where: {
-				direciones: { pedido: { codigo: ILike(cod) } },
+				direciones: { pedido: { codigo: cod } },
 			},
 		});
 		if (!direccion) throw new NotFoundException('No se encontro el pedido');
@@ -273,7 +273,7 @@ export class PedidoService {
 			relations: ['direccionDt', 'direccionDt.direccion', 'direccionDt.direccion.reprogramaciones'],
 			where: [
 				{
-					codigo: ILike(cod),
+					codigo: cod,
 				},
 			],
 		});
