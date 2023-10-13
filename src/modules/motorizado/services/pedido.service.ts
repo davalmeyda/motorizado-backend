@@ -295,6 +295,12 @@ export class PedidoService {
 		if (!pedidos || pedidos.length === 0)
 			throw new NotFoundException('No se encontraron pedidos con los codigos enviados');
 		const ids = [];
+		if (
+			pedidos.some(p => p.direccionDt === null) ||
+			pedidos.some(p => p.direccionDt.direccion === null)
+		) {
+			throw new NotFoundException('No se puede cambiar el estado de los pedidos sin dirección');
+		}
 		pedidos
 			.filter(p => (p.direccionDt ? true : false))
 			.filter(p => (p.direccionDt.direccion ? true : false))
