@@ -115,11 +115,9 @@ export class PedidoService {
 			pedido: [
 				{
 					correlativo: ILike('%' + (search || '') + '%'),
-					eliminado: 0,
 				},
 				{
 					codigo: ILike('%' + (search || '')),
-					eliminado: 0,
 				},
 			],
 			eliminado: 0,
