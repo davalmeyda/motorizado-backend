@@ -257,6 +257,7 @@ export class PedidoService {
 			if (!pedido) throw new NotFoundException('No se encontro el pedido');
 			if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
 			if (!pedido.direccionDt.direccion) throw new NotFoundException('No tiene dirección');
+			if (pedido.direccionDt.entregado) throw new NotFoundException('El pedido ya fue entregado');
 			if (pedido.direccionDt.recibido != 1)
 				throw new NotFoundException('No se puede entregar el pedido');
 			const direccion = await this.direccionRespository.findOne({
