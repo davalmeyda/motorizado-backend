@@ -12,10 +12,18 @@ export class ImagenReprogramadoService {
 	) {}
 
 	async create(reprogramacion: number, url: string, name: string) {
+		const lastIdImagen =
+			parseInt(
+				await this.imagenReprogramadoRespository.query(
+					`SELECT MAX(id) as id FROM envios_no_entregado_fotos`,
+				)[0].id,
+			) + 1;
+
 		const imagen: ImagenReprogramado = new ImagenReprogramado();
 		imagen.url = url;
 		imagen.name = name;
 		imagen.id_reprog = reprogramacion;
+		imagen.id = lastIdImagen;
 		imagen.created_at = new Date();
 		return await this.imagenReprogramadoRespository.save(imagen);
 	}

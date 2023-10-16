@@ -518,11 +518,19 @@ export class PedidoService {
 				},
 			);
 
+			const lastIdImagen =
+				parseInt(
+					await this.enviosReprogramacionRespository.query(
+						`SELECT MAX(id) as id FROM envios_reprogramaciones`,
+					)[0].id,
+				) + 1;
+
 			const reprogramacion = new EnviosReprogramaciones();
 			reprogramacion.direccion = direccion;
 			reprogramacion.motivo = motivo;
 			reprogramacion.user_id = idUser;
 			reprogramacion.created_at = new Date();
+			reprogramacion.id = lastIdImagen;
 			return this.enviosReprogramacionRespository.save(reprogramacion);
 		} catch (error) {
 			throw new NotFoundException(error);
@@ -560,10 +568,17 @@ export class PedidoService {
 				},
 			);
 
+			const lastID =
+				parseInt(
+					await this.enviosRechazadosRespository.query(
+						`SELECT MAX(id) as id FROM envios_no_entregado`,
+					)[0].id,
+				) + 1;
 			const rechazado = new EnviosRechazados();
 			rechazado.direccion = direccion;
 			rechazado.motivo = motivo;
 			rechazado.user_id = idUser;
+			rechazado.id = lastID;
 			rechazado.created_at = new Date();
 			return this.enviosRechazadosRespository.save(rechazado);
 		} catch (error) {

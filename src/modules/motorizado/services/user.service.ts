@@ -28,19 +28,19 @@ export class UserService {
 		}
 	}
 
-	create(user: UserDto) {
-		try {
-			const newUser = new User();
-			newUser.email = user.email;
-			newUser.password = user.password;
-			newUser.created_at = new Date();
-			newUser.updated_at = new Date();
+	// create(user: UserDto) {
+	// 	try {
+	// 		const newUser = new User();
+	// 		newUser.email = user.email;
+	// 		newUser.password = user.password;
+	// 		newUser.created_at = new Date();
+	// 		newUser.updated_at = new Date();
 
-			return this.UserRespository.save(newUser);
-		} catch (error) {
-			throw new NotFoundException(error);
-		}
-	}
+	// 		return this.UserRespository.save(newUser);
+	// 	} catch (error) {
+	// 		throw new NotFoundException(error);
+	// 	}
+	// }
 
 	async login(userLogin: LoginDto) {
 		try {
