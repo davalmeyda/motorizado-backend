@@ -119,7 +119,7 @@ export class PedidoController {
 		}
 	}
 
-	@Put('/imagenDespacho/:idDireccion/')
+	@Put('/imagenDespacho/:idDireccion')
 	@ApiOperation({ summary: 'Subir archivos de envio' })
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(
