@@ -520,8 +520,10 @@ export class PedidoService {
 
 			const lastIdImagen =
 				parseInt(
-					await this.enviosReprogramacionRespository.query(
-						`SELECT MAX(id) as id FROM envios_reprogramaciones`,
+					(
+						await this.enviosReprogramacionRespository.query(
+							`SELECT MAX(id) as id FROM envios_reprogramaciones`,
+						)
 					)[0].id,
 				) + 1;
 
@@ -570,8 +572,10 @@ export class PedidoService {
 
 			const lastID =
 				parseInt(
-					await this.enviosRechazadosRespository.query(
-						`SELECT MAX(id) as id FROM envios_no_entregado`,
+					(
+						await this.enviosRechazadosRespository.query(
+							`SELECT MAX(id) as id FROM envios_no_entregado`,
+						)
 					)[0].id,
 				) + 1;
 			const rechazado = new EnviosRechazados();

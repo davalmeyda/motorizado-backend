@@ -13,8 +13,10 @@ export class ImagenRechazadosService {
 	async create(rechazado_id: number, url: string, name: string) {
 		const lastIdImagen =
 			parseInt(
-				await this.imagenReprogramadoRespository.query(
-					`SELECT MAX(id) as id FROM envios_no_entregado_fotos`,
+				(
+					await this.imagenReprogramadoRespository.query(
+						`SELECT MAX(id) as id FROM envios_no_entregado_fotos`,
+					)
 				)[0].id,
 			) + 1;
 
