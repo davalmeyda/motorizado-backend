@@ -159,6 +159,7 @@ export class PedidoController {
 				throw new NotFoundException('Se necesita al menos un archivo');
 			}
 		} catch (error) {
+			console.log(error);
 			throw new NotFoundException(error);
 		}
 	}
