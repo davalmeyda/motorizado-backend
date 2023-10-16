@@ -32,13 +32,13 @@ export class ImagenEnviosService {
 		imagen.url_imagen = url;
 		imagen.user_id = user_id;
 		imagen.direccion_id = direccion_id;
-		imagen.id = lastIdEnvio[0].id + 1;
+		imagen.id = parseInt(lastIdEnvio[0].id) + 1;
 		imagen.created_at = new Date();
 		const imagenCreada = await this.imagenEnvioRespository.save(imagen);
 		const direccionDetalleImagenes = new DireccionDetalleImagenes();
 		direccionDetalleImagenes.id_direccion_detalle = direccion_id;
 		direccionDetalleImagenes.id_imagen_envio = imagenCreada.id;
-		direccionDetalleImagenes.id = lastIdDetalle[0].id + 1;
+		direccionDetalleImagenes.id = parseInt(lastIdDetalle[0].id) + 1;
 		direccionDetalleImagenes.created_at = new Date();
 		await this.direccionDetalleImagenesRespository.save(direccionDetalleImagenes);
 		return imagenCreada;
