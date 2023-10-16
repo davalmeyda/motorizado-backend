@@ -9,7 +9,6 @@ import config from 'src/config/config';
 		TypeOrmModule.forRootAsync({
 			useFactory: (configService: ConfigType<typeof config>) => {
 				return {
-					dialect: 'mariadb',
 					type: 'mariadb',
 					host: configService.host,
 					port: parseInt(configService.port_db),
