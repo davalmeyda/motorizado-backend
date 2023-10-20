@@ -416,8 +416,11 @@ export class PedidoService {
 				where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
 			});
 			if (!pedido) throw new NotFoundException('No se encontro el pedido');
-			if (pedido.direccionDt.eliminado === 1)
+			if (pedido.direccionDt.eliminado === 1) {
+				console.log(pedido.direccionDt);
+				console.log(pedido.direccionDt.eliminado);
 				throw new NotFoundException('El pedido ha sido anulado y no debe ser entregado');
+			}
 			const id = pedido.direccionDt.direccion.id;
 
 			const isValidFotos = await this.imagenEnviosService.findAllByDirección(id);
