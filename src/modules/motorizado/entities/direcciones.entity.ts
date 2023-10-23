@@ -78,6 +78,9 @@ export class Direccion {
 	estado_dir: string;
 
 	@Column()
+	fecha_asig_motorizado: Date;
+
+	@Column()
 	estado_dir_code: number;
 
 	@OneToMany(() => DireccionDT, direccionDt => direccionDt.direccion)

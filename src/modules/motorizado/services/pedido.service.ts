@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pedido } from '../entities/pedido.entity';
-import { FindOptionsWhere, ILike, In, Not, Repository } from 'typeorm';
-import { CodigosDto } from '../dtos/pedido.dto';
+import { FindOptionsWhere, ILike, In, IsNull, Not, Repository } from 'typeorm';
+import { CodigosDto, PedidoTransaccionDto } from '../dtos/pedido.dto';
 import { Direccion } from '../entities/direcciones.entity';
 import { Cliente } from '../entities/cliente.entity';
 import { Ubicacion } from '../entities/ubicaciones.entity';
@@ -86,6 +86,7 @@ export class PedidoService {
 					recibido: Not(2),
 					id_motorizado: idUser,
 					direciones: direcciones,
+					fecha_asig_motorizado: Not(IsNull()),
 				},
 			];
 			const resp = await this.direccionRespository.findAndCount({
@@ -402,91 +403,54 @@ export class PedidoService {
 		}
 	}
 
-	async changeStatusEntregado(
-		codigo: string,
-		idUser: number,
-		importe: string = '0',
-		forma_pago: string = '0',
-	) {
+	async changeStatusEntregadoTransaccion(dto: PedidoTransaccionDto) {
 		try {
-			if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
-			if (!importe) throw new NotFoundException('Debe tener un importe');
-			const pedido = await this.pedidoRespository.findOne({
-				relations: ['direccionDt', 'direccionDt.direccion'],
-				where: { codigo, direccionDt: { direccion: { id_motorizado: idUser } } },
+			if (!dto.idUser) throw new NotFoundException('Debe tener el id del usuario');
+			if (dto.importe === undefined || dto.importe === null)
+				throw new NotFoundException('Debe tener un importe');
+
+			const direccion = await this.direccionRespository.findOne({
+				relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+				where: { id: dto.direccionId, direciones: { eliminado: 0 }, estado: 1 },
 			});
-			if (!pedido) throw new NotFoundException('No se encontro el pedido');
-			if (pedido.direccionDt.eliminado === 1) {
-				console.log(pedido.direccionDt);
-				console.log(pedido.direccionDt.eliminado);
-				throw new NotFoundException('El pedido ha sido anulado y no debe ser entregado');
-			}
-			const id = pedido.direccionDt.direccion.id;
+			if (!direccion) throw new NotFoundException('No se encontro la dirección');
+			if (direccion.entregado === 2) throw new NotFoundException('La dirección ya fue entregada');
 
-			const isValidFotos = await this.imagenEnviosService.findAllByDirección(id);
-			if (!isValidFotos || isValidFotos.length === 0)
-				throw new NotFoundException('Ocurrió un error al subir las fotos del pedido');
+			const isLima = direccion.id_ubicacion === 1;
 
-			const isLima = pedido.direccionDt.direccion.id_ubicacion === 1;
+			const direccionesFiltro = direccion.direciones.filter(d => d.entregado === 0);
 
-			await this.pedidoRespository.update(
-				{ id: pedido.id },
-				{
-					condicion_envio: isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER,
-					condicion_envio_code: isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT,
-				},
-			);
+			for (const dd of direccionesFiltro) {
+				const pedido = dd.pedido;
 
-			const cambiarPedidos = await this.pedidoRespository.find({
-				relations: ['direccionDt', 'direccionDt.direccion'],
-				where: { direccionDt: { direccion: { id }, eliminado: 0 } },
-			});
+				pedido.condicion_envio = isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER;
+				pedido.condicion_envio_code = isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT;
 
-			for (const pedidoCambiar of cambiarPedidos) {
-				if (pedidoCambiar.direccionDt.recibido === 1) {
-					await this.direccionDtRespository.update(
-						{ id: pedidoCambiar.direccionDt.id },
-						{ entregado: 1, fecha_entregado: new Date() },
-					);
+				if (dd.recibido === 1) {
+					dd.entregado = 1;
+					dd.fecha_entregado = new Date();
 				}
 			}
+			const entregados = direccion.direciones.filter(d => d.entregado === 1);
 
-			const pedidos = await this.pedidoRespository.find({
-				relations: ['direccionDt', 'direccionDt.direccion'],
-				where: { direccionDt: { direccion: { id }, eliminado: 0 } },
-			});
-
-			const entregados = pedidos.filter(p => p.direccionDt.entregado === 1);
-
-			if (pedidos.length === entregados.length) {
-				await this.direccionRespository.update(
-					{ id },
-					{
-						entregado: 2,
-						importe,
-						forma_pago,
-						estado_dir: isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER,
-						estado_dir_code: isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT,
-					},
-				);
+			if (direccion.direciones.length === entregados.length) {
+				direccion.entregado = 2;
+				direccion.importe = dto.importe.toString();
+				direccion.forma_pago = dto.forma_pago;
+				direccion.estado_dir = isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER;
+				direccion.estado_dir_code = isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT;
 			} else {
-				await this.direccionRespository.update(
-					{ id },
-					{
-						entregado: 1,
-						importe,
-						forma_pago,
-						estado_dir: PRE_ENTREGADO_PARCIAL,
-						estado_dir_code: PRE_ENTREGADO_PARCIAL_INT,
-					},
-				);
+				direccion.entregado = 1;
+				direccion.importe = dto.importe.toString();
+				direccion.forma_pago = dto.forma_pago;
+				direccion.estado_dir = PRE_ENTREGADO_PARCIAL;
+				direccion.estado_dir_code = PRE_ENTREGADO_PARCIAL_INT;
 			}
-			return this.direccionRespository.findOne({
-				relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
-				where: { id },
-			});
+
+			return this.direccionRespository.save(direccion);
 		} catch (error) {
-			throw new NotFoundException(error);
+			console.log(error);
+			throw new NotFoundException('Error al Entregar');
 		}
 	}
 
@@ -502,24 +466,18 @@ export class PedidoService {
 			if (direccion.id_motorizado !== idUser)
 				throw new NotFoundException('No puede reprogramar el pedido');
 
-			const pedidos = direccion.direciones;
-			for (const pedido of pedidos) {
-				await this.pedidoRespository.update(
-					{ id: pedido.pedido.id },
-					{
-						condicion_envio: ENVIO_REPROGRAMADO,
-						condicion_envio_code: ENVIO_REPROGRAMADO_INT,
-					},
-				);
-			}
+			const detalles = direccion.direciones;
 
-			await this.direccionRespository.update(
-				{ id: direccion.id },
-				{
-					estado_dir: ENVIO_REPROGRAMADO,
-					estado_dir_code: ENVIO_REPROGRAMADO_INT,
-				},
-			);
+			detalles.forEach(detalle => {
+				const pedido = detalle.pedido;
+				pedido.condicion_envio = ENVIO_REPROGRAMADO;
+				pedido.condicion_envio_code = ENVIO_REPROGRAMADO_INT;
+			});
+
+			direccion.estado_dir = ENVIO_REPROGRAMADO;
+			direccion.estado_dir_code = ENVIO_REPROGRAMADO_INT;
+
+			await this.direccionRespository.save(direccion);
 
 			const lastIdImagen =
 				parseInt(
@@ -547,31 +505,27 @@ export class PedidoService {
 			if (!idUser) throw new NotFoundException('Debe tener el id del usuario');
 			if (!motivo) throw new NotFoundException('Debe tener un motivo');
 			const direccion = await this.direccionRespository.findOne({
-				relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
+				relations: ['direciones', 'direciones.pedido', 'reprogramaciones', 'noEntregados'],
 				where: { id: parseInt(id, 10), direciones: { eliminado: 0 } },
 			});
 			if (!direccion) throw new NotFoundException('No se encontro la direccion');
 			if (direccion.id_motorizado !== idUser)
 				throw new NotFoundException('No puede reprogramar el pedido');
+			if (direccion.noEntregados.length > 0)
+				throw new NotFoundException('El pedido ya fue marcado como No entregado');
 
-			const pedidos = direccion.direciones;
-			for (const pedido of pedidos) {
-				await this.pedidoRespository.update(
-					{ id: pedido.pedido.id },
-					{
-						condicion_envio: ENVIO_NO_ENTREGADO,
-						condicion_envio_code: ENVIO_NO_ENTREGADO_INT,
-					},
-				);
-			}
+			const detalles = direccion.direciones;
 
-			await this.direccionRespository.update(
-				{ id: direccion.id },
-				{
-					estado_dir: ENVIO_NO_ENTREGADO,
-					estado_dir_code: ENVIO_NO_ENTREGADO_INT,
-				},
-			);
+			detalles.forEach(detalle => {
+				const pedido = detalle.pedido;
+				pedido.condicion_envio = ENVIO_NO_ENTREGADO;
+				pedido.condicion_envio_code = ENVIO_NO_ENTREGADO_INT;
+			});
+
+			direccion.estado_dir = ENVIO_NO_ENTREGADO;
+			direccion.estado_dir_code = ENVIO_NO_ENTREGADO_INT;
+
+			await this.direccionRespository.save(direccion);
 
 			const lastID =
 				parseInt(
