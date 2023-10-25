@@ -468,11 +468,14 @@ export class PedidoService {
 
 			const detalles = direccion.direciones;
 
-			detalles.forEach(detalle => {
+			for (const detalle of detalles) {
 				const pedido = detalle.pedido;
 				pedido.condicion_envio = ENVIO_REPROGRAMADO;
 				pedido.condicion_envio_code = ENVIO_REPROGRAMADO_INT;
-			});
+				await this.pedidoRespository.save(pedido);
+			}
+
+			// detalles.forEach(detalle => {});
 
 			direccion.estado_dir = ENVIO_REPROGRAMADO;
 			direccion.estado_dir_code = ENVIO_REPROGRAMADO_INT;
@@ -516,11 +519,14 @@ export class PedidoService {
 
 			const detalles = direccion.direciones;
 
-			detalles.forEach(detalle => {
+			for (const detalle of detalles) {
 				const pedido = detalle.pedido;
 				pedido.condicion_envio = ENVIO_NO_ENTREGADO;
 				pedido.condicion_envio_code = ENVIO_NO_ENTREGADO_INT;
-			});
+				await this.pedidoRespository.save(pedido);
+			}
+
+			// detalles.forEach(detalle => {});
 
 			direccion.estado_dir = ENVIO_NO_ENTREGADO;
 			direccion.estado_dir_code = ENVIO_NO_ENTREGADO_INT;
