@@ -438,6 +438,8 @@ export class PedidoService {
 				where: { direccionDt: { direccion: { id }, eliminado: 0 } },
 			});
 
+			console.log("Logggggggggggggggggggggggggggg: "+cambiarPedidos);
+
 			for (const pedidoCambiar of cambiarPedidos) {
 				if (pedidoCambiar.direccionDt.recibido === 1) {
 					await this.direccionDtRespository.update(
