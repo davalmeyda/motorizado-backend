@@ -41,7 +41,7 @@ export class PedidoService {
 		@InjectRepository(EnviosRechazados)
 		private readonly enviosRechazadosRespository: Repository<EnviosRechazados>,
 		private readonly imagenEnviosService: ImagenEnviosService,
-	) {}
+	) { }
 
 	findAll(search: string) {
 		try {
@@ -422,13 +422,14 @@ export class PedidoService {
 
 			for (const dd of direccionesFiltro) {
 				const pedido = dd.pedido;
-
 				pedido.condicion_envio = isLima ? CONFIRM_MOTORIZADO : EN_AGENCIA_COURIER;
 				pedido.condicion_envio_code = isLima ? CONFIRM_MOTORIZADO_INT : EN_AGENCIA_COURIER_INT;
 
+				await this.pedidoRespository.save(pedido);
 				if (dd.recibido === 1) {
 					dd.entregado = 1;
 					dd.fecha_entregado = new Date();
+					await this.direccionDtRespository.save(dd);
 				}
 			}
 			const entregados = direccion.direciones.filter(d => d.entregado === 1);
