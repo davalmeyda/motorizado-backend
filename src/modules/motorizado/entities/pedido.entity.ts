@@ -2,7 +2,7 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
-	OneToOne,
+	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from 'typeorm';
@@ -34,6 +34,6 @@ export class Pedido {
 	@UpdateDateColumn()
 	updated_at: Date;
 
-	@OneToOne(() => DireccionDT, direccion => direccion.pedido)
-	direccionDt: DireccionDT;
+	@OneToMany(() => DireccionDT, direccion => direccion.pedido)
+	direccionDt: DireccionDT[];
 }

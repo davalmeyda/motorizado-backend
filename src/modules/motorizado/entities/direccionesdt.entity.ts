@@ -11,7 +11,7 @@ export class DireccionDT {
 	@JoinColumn({ name: 'id_direccion_sobres' })
 	direccion: Direccion;
 
-	@OneToOne(() => Pedido, pedido => pedido.direccionDt)
+	@ManyToOne(() => Pedido, pedido => pedido.direccionDt)
 	@JoinColumn({ name: 'id_pedido' })
 	pedido: Pedido;
 

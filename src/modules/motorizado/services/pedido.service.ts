@@ -41,7 +41,7 @@ export class PedidoService {
 		@InjectRepository(EnviosRechazados)
 		private readonly enviosRechazadosRespository: Repository<EnviosRechazados>,
 		private readonly imagenEnviosService: ImagenEnviosService,
-	) { }
+	) {}
 
 	findAll(search: string) {
 		try {
@@ -257,9 +257,11 @@ export class PedidoService {
 			});
 			if (!pedido) throw new NotFoundException('No se encontro el pedido');
 			if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
-			if (!pedido.direccionDt.direccion) throw new NotFoundException('No tiene dirección');
-			if (pedido.direccionDt.entregado) throw new NotFoundException('El pedido ya fue entregado');
-			if (pedido.direccionDt.recibido != 1)
+			if (!pedido.direccionDt.find(e => e.eliminado === 0).direccion)
+				throw new NotFoundException('No tiene dirección');
+			if (pedido.direccionDt.find(e => e.eliminado === 0).entregado)
+				throw new NotFoundException('El pedido ya fue entregado');
+			if (pedido.direccionDt.find(e => e.eliminado === 0).recibido != 1)
 				throw new NotFoundException('No se puede entregar el pedido');
 			const direccion = await this.direccionRespository.findOne({
 				relations: ['direciones', 'direciones.pedido', 'reprogramaciones'],
@@ -322,10 +324,14 @@ export class PedidoService {
 			});
 			if (!pedido) throw new NotFoundException('No se encontró el codigo');
 			if (!pedido.direccionDt) throw new NotFoundException('No tiene dirección');
-			if (!pedido.direccionDt.direccion) throw new NotFoundException('No tiene dirección');
-			if (!pedido.direccionDt.direccion.id_motorizado)
+			if (!pedido.direccionDt.find(e => e.eliminado === 0).direccion)
+				throw new NotFoundException('No tiene dirección');
+			if (!pedido.direccionDt.find(e => e.eliminado === 0).direccion.id_motorizado)
 				throw new NotFoundException('No tiene permisos para acceder a este pedido');
-			if (pedido.direccionDt.direccion.id_motorizado !== parseInt(idUser, 10))
+			if (
+				pedido.direccionDt.find(e => e.eliminado === 0).direccion.id_motorizado !==
+				parseInt(idUser, 10)
+			)
 				throw new NotFoundException('No tiene permisos para acceder a este pedido');
 			return pedido;
 		} catch (error) {
@@ -344,16 +350,20 @@ export class PedidoService {
 			const ids = [];
 			if (
 				pedidos.some(p => p.direccionDt === null) ||
-				pedidos.some(p => p.direccionDt.direccion === null)
+				pedidos.some(p => p.direccionDt.find(e => e.eliminado === 0).direccion === null)
 			) {
 				throw new NotFoundException('No se puede cambiar el estado de los pedidos sin dirección');
 			}
 			pedidos
 				.filter(p => (p.direccionDt ? true : false))
-				.filter(p => (p.direccionDt.direccion ? true : false))
-				.filter(p => p.direccionDt?.direccion?.id_motorizado === codigosDto.idUser)
+				.filter(p => (p.direccionDt.find(e => e.eliminado === 0).direccion ? true : false))
+				.filter(
+					p =>
+						p.direccionDt?.find(e => e.eliminado === 0).direccion?.id_motorizado ===
+						codigosDto.idUser,
+				)
 				.forEach(pedido => {
-					ids.push(pedido.direccionDt.direccion.id);
+					ids.push(pedido.direccionDt.find(e => e.eliminado === 0).direccion.id);
 				});
 			if (ids.length === 0)
 				throw new NotFoundException(
@@ -370,7 +380,7 @@ export class PedidoService {
 					},
 				);
 				await this.direccionDtRespository.update(
-					{ id: pedido.direccionDt.id },
+					{ id: pedido.direccionDt.find(e => e.eliminado === 0).id },
 					{ recibido: 1, fecha_recibido: new Date() },
 				);
 			}
@@ -381,7 +391,9 @@ export class PedidoService {
 					relations: ['direccionDt', 'direccionDt.direccion'],
 					where: { direccionDt: { direccion: { id } } },
 				});
-				const recibidos = pedidos.filter(p => p.direccionDt.recibido === 1);
+				const recibidos = pedidos.filter(
+					p => p.direccionDt.find(e => e.eliminado === 0).recibido === 1,
+				);
 				if (pedidos.length === recibidos.length) {
 					await this.direccionRespository.update(
 						{ id },
