@@ -82,12 +82,13 @@ export class PedidoController {
 					},
 				);
 
-				const fullPath = result.filepath;
-				const parts = fullPath.split('\\'); // Divide la cadena por el separador de directorios de Windows
-				const relevantPartIndex = parts.indexOf('public');
-				const url_imagen = parts.slice(relevantPartIndex + 1).join('/')+'/'+result.filename; 
+				const fullPath = result.filepath.split("public/");
+				// console.log("ruta: "+fullPath);
+				// const parts = fullPath.split('\\'); // Divide la cadena por el separador de directorios de Windows
+				// const relevantPartIndex = parts.indexOf('public');
+				// const url_imagen = parts.slice(relevantPartIndex + 1).join('/')+'/'+result.filename; 
 				//--- CREAR PDF EN LA TABLA IMAGEN
-				await this.imagenBancarizacion.create(PedidoId, userId, result.filename, url_imagen);
+				await this.imagenBancarizacion.create(PedidoId, userId, result.filename, fullPath[1]+"/"+result.filename);
 			}
 
 			return {
