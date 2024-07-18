@@ -30,7 +30,7 @@ export class UserService {
 				: user.password;
 			const match = await bcrypt.compare(password, hashPass);
 			if (match) {
-				if (user.rol === 'Administrador') {
+				if (user.rol === 'Bancarización') {
 					return user;
 				}
 				throw new ForbiddenException('No tiene permisos para acceder');

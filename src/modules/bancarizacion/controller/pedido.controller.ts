@@ -70,7 +70,7 @@ export class PedidoController {
 
 			const result = await this.pedidoService.createPdf(files, PedidoId);
 			//   console.log("resultado: "+result.statusCode );
-			if (result.statusCode == 201) {
+			if (result.statusCode === 201) {
 				await this.pedidoRepository.update(
 					{ id: PedidoId },
 					{
