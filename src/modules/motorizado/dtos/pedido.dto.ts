@@ -36,3 +36,23 @@ export class ImagenEnvioDto {
 	@ApiProperty({ type: 'string', format: 'binary', required: false })
 	imagen: any;
 }
+
+export class PedidoTransaccionDto {
+	@IsNumber()
+	@ApiProperty()
+	direccionId: number;
+
+	@IsNumber()
+	@ApiProperty()
+	idUser: number;
+
+	@IsOptional()
+	@IsNumber()
+	@ApiProperty()
+	importe: number;
+
+	@IsOptional()
+	@IsString()
+	@ApiProperty()
+	forma_pago: string;
+}

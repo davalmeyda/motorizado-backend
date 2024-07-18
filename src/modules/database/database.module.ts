@@ -9,7 +9,7 @@ import config from 'src/config/config';
 		TypeOrmModule.forRootAsync({
 			useFactory: (configService: ConfigType<typeof config>) => {
 				return {
-					type: 'mysql',
+					type: 'mariadb',
 					host: configService.host,
 					port: parseInt(configService.port_db),
 					username: configService.user_name,
@@ -24,4 +24,4 @@ import config from 'src/config/config';
 	],
 	exports: [TypeOrmModule],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}

@@ -31,11 +31,11 @@ export class UserController {
 	// // 	return this.UserService.findOne(id);
 	// // }
 
-	@Post()
-	@ApiOperation({ summary: 'Crear usuario' })
-	async create(@Body() user: UserDto) {
-		return this.userService.create(user);
-	}
+	// @Post()
+	// @ApiOperation({ summary: 'Crear usuario' })
+	// async create(@Body() user: UserDto) {
+	// 	return this.userService.create(user);
+	// }
 
 	// @Post('login')
 	// @ApiOperation({ summary: 'Login usuario' })

@@ -14,7 +14,7 @@ import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PedidoService } from '../services/pedido.service';
 // import { PedidoDto } from '../dtos/pedido.dto';
 import { customResponse } from 'src/common/response';
-import { CodigosDto, ImagenEnvioDto } from '../dtos/pedido.dto';
+import { CodigosDto, ImagenEnvioDto, PedidoTransaccionDto } from '../dtos/pedido.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { pathFile } from 'src/utils/pathFile';
 import { constantes } from 'src/common/constantes';
@@ -98,28 +98,18 @@ export class PedidoController {
 		}
 	}
 
-	@Put('entregar/:codigo')
+	@Put('entregar')
 	@ApiOperation({ summary: 'Cambiar estado de entregado al pedido' })
-	async changeStatusEntregado(
-		@Param('codigo') codigo: string,
-		@Query('idUser') idUser: number,
-		@Query('importe') importe: string,
-		@Query('forma_pago') forma_pago: string,
-	) {
+	async changeStatusEntregado(@Body() dto: PedidoTransaccionDto) {
 		try {
-			const response = await this.pedidoService.changeStatusEntregado(
-				codigo,
-				idUser,
-				importe,
-				forma_pago,
-			);
+			const response = await this.pedidoService.changeStatusEntregadoTransaccion(dto);
 			return customResponse('pedidos', response);
 		} catch (error) {
 			throw new NotFoundException(error);
 		}
 	}
 
-	@Put('/imagenDespacho/:idDireccion/')
+	@Put('/imagenDespacho/:idDireccion')
 	@ApiOperation({ summary: 'Subir archivos de envio' })
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(
@@ -159,6 +149,7 @@ export class PedidoController {
 				throw new NotFoundException('Se necesita al menos un archivo');
 			}
 		} catch (error) {
+			console.log(error);
 			throw new NotFoundException(error);
 		}
 	}

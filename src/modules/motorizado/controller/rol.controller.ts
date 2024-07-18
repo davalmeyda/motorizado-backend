@@ -22,11 +22,11 @@ export class RolController {
 		return this.rolService.findOne(idRol);
 	}
 
-	@Post()
-	@ApiOperation({ summary: 'Crear rol' })
-	async create(@Body() rol: RolDto) {
-		return this.rolService.create(rol);
-	}
+	// @Post()
+	// @ApiOperation({ summary: 'Crear rol' })
+	// async create(@Body() rol: RolDto) {
+	// 	return this.rolService.create(rol);
+	// }
 
 	@Delete(':id')
 	@ApiOperation({ summary: 'Eliminar rol' })

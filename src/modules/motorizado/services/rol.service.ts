@@ -18,15 +18,15 @@ export class RolService {
 		});
 	}
 
-	create(rol: RolDto) {
-		const newRol = new Rol();
-		newRol.name = rol.name;
-		newRol.guard_name = rol.guard_name;
-		newRol.created_at = new Date();
-		newRol.updated_at = new Date();
+	// create(rol: RolDto) {
+	// 	const newRol = new Rol();
+	// 	newRol.name = rol.name;
+	// 	newRol.guard_name = rol.guard_name;
+	// 	newRol.created_at = new Date();
+	// 	newRol.updated_at = new Date();
 
-		return this.rolRespository.save(newRol);
-	}
+	// 	return this.rolRespository.save(newRol);
+	// }
 
 	delete(idRol: number) {
 		return this.rolRespository.delete(idRol);
