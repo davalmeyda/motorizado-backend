@@ -67,7 +67,7 @@ export class PedidoController {
 			}
 
 			console.log('Pedido id controlador: ' + PedidoId);
-
+			let ruta_url= '';
 			const result = await this.pedidoService.createPdf(files, PedidoId);
 			//   console.log("resultado: "+result.statusCode );
 			if (result.statusCode === 201) {
@@ -89,11 +89,13 @@ export class PedidoController {
 				// const url_imagen = parts.slice(relevantPartIndex + 1).join('/')+'/'+result.filename; 
 				//--- CREAR PDF EN LA TABLA IMAGEN
 				await this.imagenBancarizacion.create(PedidoId, userId, result.filename, fullPath[1]+"/"+result.filename);
+				ruta_url = fullPath[1]+"/"+result.filename;
 			}
 
 			return {
 				statusCode: result.statusCode,
 				message: result.message,
+				ruta_archivo: ruta_url ,
 				body: result.pdfPaths, // Ajusta según lo que devuelva exactamente createPdf
 			};
 		} catch (error) {
