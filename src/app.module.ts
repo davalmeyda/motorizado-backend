@@ -8,6 +8,7 @@ import config, { validation } from './config/config';
 import * as Joi from 'joi';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { BancarizacionModule } from './modules/bancarizacion/bancarizacion.module';
 
 @Module({
 	imports: [
@@ -26,6 +27,7 @@ import { join } from 'path';
 		}),
 		DatabaseModule,
 		MotorizadoModule,
+		BancarizacionModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

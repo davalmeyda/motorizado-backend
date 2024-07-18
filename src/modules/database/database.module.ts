@@ -17,6 +17,7 @@ import config from 'src/config/config';
 					database: configService.database,
 					autoLoadEntities: true,
 					synchronize: false,
+					// logging: true,
 				};
 			},
 			inject: [config.KEY],
@@ -24,4 +25,4 @@ import config from 'src/config/config';
 	],
 	exports: [TypeOrmModule],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}
