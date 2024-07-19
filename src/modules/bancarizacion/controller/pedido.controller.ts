@@ -42,7 +42,7 @@ export class PedidoController {
 	@Post('imagenes')
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(
-		FilesInterceptor('images', 10, {
+		FilesInterceptor('images', 200, {
 			storage: getStorage(constantes.pathFile + 'bancarizacion/images', true),
 		}),
 	)
