@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus, HttpException, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, Repository, SelectQueryBuilder } from 'typeorm';
 import { PDFDocument } from 'pdf-lib';
@@ -72,7 +72,7 @@ export class PedidoService {
 				statusCode: HttpStatus.CREATED, // Código de estado HTTP 201 para creación exitosa
 			};
 		} catch (error) {
-			throw new HttpException('Error al crear el PDF', HttpStatus.BAD_REQUEST);
+			throw new BadRequestException('Error al crear el PDF Service: ',error);
 		}
 	}
 	async getPedidos(): Promise<Pedido[]> {

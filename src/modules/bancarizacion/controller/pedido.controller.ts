@@ -68,6 +68,7 @@ export class PedidoController {
 
 			console.log('Pedido id controlador: ' + PedidoId);
 			let ruta_url= '';
+			console.log(files);
 			const result = await this.pedidoService.createPdf(files, PedidoId);
 			//   console.log("resultado: "+result.statusCode );
 			if (result.statusCode === 201) {
