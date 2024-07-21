@@ -16,8 +16,9 @@ export class ImagenBancarizacionService {
 			`SELECT MAX(id) as id FROM imagen_bancarizacion`,
 		);
 
+		
 		const imagen: ImagenBancarizacion = new ImagenBancarizacion();
-		imagen.id = parseInt(lastIdEnvio[0].id) + 1
+		imagen.id = parseInt(lastIdEnvio[0].id ?? 0) + 1
 		imagen.pedido_id = pedido_id;
 		imagen.user_id = user_id;
         imagen.name = name;
