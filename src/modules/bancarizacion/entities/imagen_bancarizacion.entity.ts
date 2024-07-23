@@ -16,6 +16,12 @@ export class ImagenBancarizacion {
 	@Column()
 	url: string;
 
+	@Column()
+	pdf_size: number;
+
+	@Column()
+	cant_vouchers: number;
+
 	@CreateDateColumn()
 	created_at: Date;
 

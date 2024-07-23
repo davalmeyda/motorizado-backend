@@ -5,19 +5,21 @@ import { PDFDocument } from 'pdf-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Pedido } from '../entities/pedido.entity';
+
 import { constantes } from 'src/common/constantes';
+import { ImagenBancarizacion } from '../entities/imagen_bancarizacion.entity';
 
 @Injectable()
 export class PedidoService {
 	constructor(
 		@InjectRepository(Pedido) private readonly pedidoRepository: Repository<Pedido>,
+		@InjectRepository(ImagenBancarizacion) private readonly imagenBancaRepository: Repository<ImagenBancarizacion>,
 	
 	) {}
 
 	async createPdf(
-		files: Express.Multer.File[],
-		pedidoId: number,
-	): Promise<{ message: string; pdfPaths: string[]; statusCode: number,filename : string ,filepath : string}> {
+		files: Express.Multer.File[]
+	): Promise<{ message: string; pdfPaths: string[]; statusCode: number,filename : string ,filepath : string, size:any}> {
 		try {
 			const uploadsDir = constantes.pathFile + 'bancarizacion';
 
@@ -56,7 +58,7 @@ export class PedidoService {
 
 			// Generar el nombre del archivo PDF basado en el nombre original del primer archivo de imagen
 			// console.log(path.parse(files[0].originalname));
-			const originalFileName = path.parse(files[0].originalname).name;
+			const originalFileName = path.parse(files[0].filename).name;
 			const pdfFileName = `${originalFileName}.pdf`;
 			const pdfPath = path.join(uploadsDir, pdfFileName);
 
@@ -64,19 +66,26 @@ export class PedidoService {
 			const pdfBytes = await pdfDoc.save();
 			fs.writeFileSync(pdfPath, pdfBytes);
 
+			// Obtener información sobre el archivo PDF generado
+			const pdfStats = fs.statSync(pdfPath);
+			const pdfSizeInBytes = pdfStats.size;
+
+
 			return {
 				message: 'PDF creado con éxito.',
 				filename: pdfFileName,
 				filepath: uploadsDir,
 				pdfPaths: [pdfPath], // Un solo archivo PDF
+				size: pdfSizeInBytes,
 				statusCode: HttpStatus.CREATED, // Código de estado HTTP 201 para creación exitosa
 			};
 		} catch (error) {
 			throw new BadRequestException('Error al crear el PDF Service: ',error);
 		}
 	}
-	async getPedidos(): Promise<Pedido[]> {
+	async getPedidos(Bases: any[]): Promise<Pedido[]> {
 		try {
+				
 			const pedidos = await this.pedidoRepository
 				.createQueryBuilder('pedidos')
 				.leftJoinAndSelect('pedidos.user', 'u')
@@ -89,6 +98,7 @@ export class PedidoService {
 				)
 				.andWhere('u.estado = :estado', { estado: '1' })
 				.andWhere('pedidos.correccion IN (:...correcciones)', { correcciones: [0, 1, 3] })
+				// .andWhere('pedidos.user_clavepedido IN (:...user_clavepedido)', { user_clavepedido: Bases })
 				.andWhere('pedidos.correccion_completada IN (:...correcciones_completada)', {
 					correcciones_completada: [0, 1, null],
 				})
@@ -101,12 +111,14 @@ export class PedidoService {
 					condicion_envio_code: 40,
 				})
 				.andWhere('abdi.id IS NULL')
-				.select(['pedidos.id', 'pedidos.codigo', 'dp.nombre_empresa', 'pedidos.c_tipo_banca'])
+				.select(['pedidos.id', 'pedidos.codigo', 'dp.nombre_empresa', 'pedidos.c_tipo_banca','pedidos.user_clavepedido'])
 				.getMany();
 
-			return pedidos;
+			const pedidosFiltrados = pedidos.filter(pedido => Bases.includes(pedido.user_clavepedido));
+
+			return pedidosFiltrados;
 		} catch (error) {
-			console.error('Error en PedidoService al obtener pedidos:', error);
+			console.log('Error en PedidoService al obtener pedidos:', Bases);
 			throw error;
 		}
 	}

@@ -13,6 +13,8 @@ import { AutorizacionBancaDigital } from './entities/autorizacion_banca.entity';
 import { AutorizacionBancaDigitalImagenes } from './entities/autorizacion_banca_imagenes.entity';
 import { ImagenBancarizacionService } from './services/imagenBancarizacion.service';
 import { ImagenBancarizacion } from './entities/imagen_bancarizacion.entity';
+import { OperacionOficinaService } from './services/operacionesOficinas.service';
+import { OperacionOficina } from './entities/operaciones_oficinas.entity';
 
 @Module({
 	imports: [
@@ -24,9 +26,10 @@ import { ImagenBancarizacion } from './entities/imagen_bancarizacion.entity';
 			AutorizacionBancaDigital,
 			AutorizacionBancaDigitalImagenes,
 			ImagenBancarizacion,
+			OperacionOficina,
 		]),
 	],
-	providers: [UserService, PedidoService,ImagenBancarizacionService],
+	providers: [UserService, PedidoService,ImagenBancarizacionService,OperacionOficinaService],
 	controllers: [UserController, PedidoController],
 })
 export class BancarizacionModule {}

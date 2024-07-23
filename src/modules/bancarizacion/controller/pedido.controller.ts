@@ -22,6 +22,7 @@ import * as fs from 'fs';
 import { constantes, getStorage } from 'src/common/constantes';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { OperacionOficinaService } from '../services/operacionesOficinas.service';
 import { ImagenBancarizacion } from '../entities/imagen_bancarizacion.entity';
 import { ImagenBancarizacionService } from '../services/imagenBancarizacion.service';
 import { pathFile } from 'src/utils/pathFile';
@@ -37,13 +38,14 @@ export class PedidoController {
 		private readonly pedidoService: PedidoService,
 		@InjectRepository(Pedido) private readonly pedidoRepository: Repository<Pedido>,
 		private readonly imagenBancarizacion: ImagenBancarizacionService,
+		private readonly OperacionOficina: OperacionOficinaService,
 	) {}
 
 	@Post('imagenes')
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(
 		FilesInterceptor('images', 200, {
-			storage: getStorage(constantes.pathFile + 'bancarizacion/images', true),
+			storage: getStorage(constantes.pathFile + 'bancarizacion/images', false),
 		}),
 	)
 	@ApiBody({
@@ -66,10 +68,10 @@ export class PedidoController {
 				throw new BadRequestException('PedidoId es requerido en la consulta.');
 			}
 
-			console.log('Pedido id controlador: ' + PedidoId);
-			let ruta_url= '';
-			console.log(files);
-			const result = await this.pedidoService.createPdf(files, PedidoId);
+			// console.log('Pedido id controlador: ' + PedidoId);
+			let ruta_url = '';
+			// console.log(files);
+			const result = await this.pedidoService.createPdf(files);
 			//   console.log("resultado: "+result.statusCode );
 			if (result.statusCode === 201) {
 				await this.pedidoRepository.update(
@@ -83,20 +85,28 @@ export class PedidoController {
 					},
 				);
 
-				const fullPath = result.filepath.split("public/");
+				const fullPath = result.filepath.split('public/');
 				// console.log("ruta: "+fullPath);
 				// const parts = fullPath.split('\\'); // Divide la cadena por el separador de directorios de Windows
 				// const relevantPartIndex = parts.indexOf('public');
-				// const url_imagen = parts.slice(relevantPartIndex + 1).join('/')+'/'+result.filename; 
+				// const url_imagen = parts.slice(relevantPartIndex + 1).join('/')+'/'+result.filename;
 				//--- CREAR PDF EN LA TABLA IMAGEN
-				await this.imagenBancarizacion.create(PedidoId, userId, result.filename, fullPath[1]+"/"+result.filename);
-				ruta_url = fullPath[1]+"/"+result.filename;
+				await this.imagenBancarizacion.create(
+					PedidoId,
+					userId,
+					result.filename,
+					fullPath[1] + '/' + result.filename,
+					files.length,
+					result.size,
+					
+				);
+				ruta_url = fullPath[1] + '/' + result.filename;
 			}
 
 			return {
 				statusCode: result.statusCode,
 				message: result.message,
-				ruta_archivo: ruta_url ,
+				ruta_archivo: ruta_url,
 				body: result.pdfPaths, // Ajusta según lo que devuelva exactamente createPdf
 			};
 		} catch (error) {
@@ -107,18 +117,46 @@ export class PedidoController {
 
 	@Get('listar_banca')
 	@ApiOperation({ summary: 'Listar todos los pedidos de bancarizacion' })
-	async getPedidos(): Promise<ApiResponse> {
+	async getPedidos(@Query('OficinaUser') OficinaUser: number): Promise<ApiResponse> {
 		// Asegúrate de definir el tipo de retorno como Promise<Pedido[]>
 		try {
-			const pedidos = await this.pedidoService.getPedidos();
-			return {
-				statusCode: 200,
-				message: 'Pedidos encontrados exitosamente',
-				body: pedidos,
-			};
+
+			if (!OficinaUser) throw new BadRequestException('La oficina del usuario no existe');
+
+			if(OficinaUser.toString() === 'null'){
+				return {
+					statusCode: 400,
+					message: 'La oficina del usuario no existe',
+					body: [],
+				};
+			}
+
+			const result_oficina = await this.OperacionOficina.findAll(OficinaUser)
+			const Bases =  result_oficina.map(oficina => oficina.base);
+		
+			// console.log('Número de elementos en Bases:', Bases.length);
+			const pedidos = await this.pedidoService.getPedidos(Bases);
+
+			if(pedidos){
+				return {
+					statusCode: 200,
+					message: 'Pedidos encontrados exitosamente',
+					body: pedidos,
+				};
+			}
+			
 		} catch (error) {
 			console.error('Error al obtener pedidos:', error);
 			throw error;
 		}
+	}
+
+
+	@Get('pedidos_diarios')
+	@ApiOperation({ summary: 'Listar todos los pedidos de bancarizacion del día por cada usuarios' })
+	async getPedidoDiario(@Query('UserId') UserId: number) {
+
+		const response = await this.imagenBancarizacion.findAll(UserId);
+		return customResponse('lista_diario', response);
 	}
 }

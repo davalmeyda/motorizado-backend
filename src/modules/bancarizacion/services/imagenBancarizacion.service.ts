@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ImagenBancarizacion } from '../entities/imagen_bancarizacion.entity';
+import { identity } from 'rxjs';
 
 @Injectable()
 export class ImagenBancarizacionService {
@@ -10,7 +11,7 @@ export class ImagenBancarizacionService {
 		private readonly imagenBancarizacionRepository: Repository<ImagenBancarizacion>,
 	) {}
 
-	async create(pedido_id: number,user_id: number, name: string, url: string) {
+	async create(pedido_id: number,user_id: number, name: string, url: string, cant_vouchers: number , pdf: any) {
 
 		const lastIdEnvio = await this.imagenBancarizacionRepository.query(
 			`SELECT MAX(id) as id FROM imagen_bancarizacion`,
@@ -23,8 +24,18 @@ export class ImagenBancarizacionService {
 		imagen.user_id = user_id;
         imagen.name = name;
         imagen.url = url;
+        imagen.cant_vouchers = cant_vouchers;
+        imagen.pdf_size = pdf;
 		imagen.created_at = new Date();
 		imagen.updated_at = new Date();
 		return await this.imagenBancarizacionRepository.save(imagen);
+	}
+
+	async findAll(UserId: number) {
+		return await this.imagenBancarizacionRepository.find({
+			where: {
+				user_id: UserId,
+			},
+		});
 	}
 }

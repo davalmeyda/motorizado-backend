@@ -33,6 +33,9 @@ export class User {
 	@Column()
 	estado: number;
 
+	@Column()
+	oficina: number;
+
 	@CreateDateColumn()
 	created_at: Date;
 

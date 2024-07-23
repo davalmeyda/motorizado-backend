@@ -1,8 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+	Entity,
+	PrimaryGeneratedColumn,
+	Column,
+	OneToMany,
+	OneToOne,
+	JoinColumn,
+	CreateDateColumn,
+	UpdateDateColumn,
+	ManyToOne,
+} from 'typeorm';
 import { DetallePedido } from './detalle_pedido.entity';
 import { PedidosAnulacion } from './pedidos_anulacion.entity';
 import { AutorizacionBancaDigital } from './autorizacion_banca.entity';
 import { User } from './user.entity';
+import { OperacionOficina } from './operaciones_oficinas.entity';
 
 @Entity({ name: 'pedidos' })
 export class Pedido {
@@ -50,13 +61,13 @@ export class Pedido {
 
 	@UpdateDateColumn()
 	updated_at: Date;
-
+	
 	@OneToOne(() => DetallePedido)
 	@JoinColumn({ name: 'id', referencedColumnName: 'pedido_id' })
 	detallePedidos: DetallePedido;
 
 	@OneToMany(() => PedidosAnulacion, anulacion => anulacion.pedido)
-    pedidosAnulacions: PedidosAnulacion[];
+	pedidosAnulacions: PedidosAnulacion[];
 
 	@OneToMany(() => AutorizacionBancaDigital, abd => abd.pedido)
 	autorizacionBancaDigital: AutorizacionBancaDigital[];
