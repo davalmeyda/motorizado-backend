@@ -34,7 +34,7 @@ export class ImagenBancarizacionService {
 		imagen.pdf_size = pdf;
 
 		const now = new Date();
-		now.setHours(now.getHours() - 4);
+		now.setHours(now.getHours() - 5);
 
 		imagen.created_at = now;
 		imagen.updated_at = now;
@@ -43,10 +43,10 @@ export class ImagenBancarizacionService {
 
 	async findAll(UserId: number) {
 		const startOfDay = new Date();
-		startOfDay.setHours(startOfDay.getHours() - 4, 0, 0, 0);
+		startOfDay.setHours(startOfDay.getHours() - 5, 0, 0, 0);
 
 		const endOfDay = new Date();
-		endOfDay.setHours(endOfDay.getHours() + 19, 59, 59, 999);
+		endOfDay.setHours(endOfDay.getHours() + 18, 59, 59, 999);
 		return await this.imagenBancarizacionRepository.find({
 			where: {
 				user_id: UserId,
