@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { ImagenBancarizacion } from '../entities/imagen_bancarizacion.entity';
 import { identity } from 'rxjs';
+import moment from 'moment-timezone';
 
 @Injectable()
 export class ImagenBancarizacionService {
@@ -31,16 +32,21 @@ export class ImagenBancarizacionService {
 		imagen.url = url;
 		imagen.cant_vouchers = cant_vouchers;
 		imagen.pdf_size = pdf;
-		imagen.created_at = new Date();
-		imagen.updated_at = new Date();
+
+		const now = new Date();
+		now.setHours(now.getHours() - 4);
+
+		imagen.created_at = now;
+		imagen.updated_at = now;
 		return await this.imagenBancarizacionRepository.save(imagen);
 	}
 
 	async findAll(UserId: number) {
 		const startOfDay = new Date();
-		startOfDay.setHours(0, 0, 0, 0);
+		startOfDay.setHours(startOfDay.getHours() - 4, 0, 0, 0);
+
 		const endOfDay = new Date();
-		endOfDay.setHours(23, 59, 59, 999);
+		endOfDay.setHours(endOfDay.getHours() + 19, 59, 59, 999);
 		return await this.imagenBancarizacionRepository.find({
 			where: {
 				user_id: UserId,
