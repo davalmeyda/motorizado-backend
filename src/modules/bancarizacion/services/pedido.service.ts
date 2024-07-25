@@ -110,8 +110,9 @@ export class PedidoService {
 				.andWhere('pedidos.condicion_envio_code = :condicion_envio_code', {
 					condicion_envio_code: 40,
 				})
-				.andWhere('abdi.id IS NULL')
-				.select(['pedidos.id', 'pedidos.codigo', 'dp.nombre_empresa', 'pedidos.c_tipo_banca','pedidos.user_clavepedido'])
+				.andWhere('abdi.id IS NOT NULL')
+				.andWhere('pedidos.user_pdf_banca IS NOT NULL')
+				.select(['pedidos.id', 'pedidos.codigo', 'dp.nombre_empresa', 'pedidos.c_tipo_banca','pedidos.user_clavepedido','pedidos.fecha_envio_atendido_op'])
 				.getMany();
 
 			const pedidosFiltrados = pedidos.filter(pedido => Bases.includes(pedido.user_clavepedido));

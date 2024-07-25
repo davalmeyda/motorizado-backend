@@ -45,6 +45,9 @@ export class Pedido {
 	user_clavepedido: string;
 
 	@Column()
+	user_pdf_banca: number;
+
+	@Column()
 	fecha_envio_atendido_op: Date;
 
 	@Column()
