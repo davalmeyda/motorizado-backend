@@ -112,7 +112,7 @@ export class PedidoService {
 				})
 				.andWhere('abdi.id IS NULL')
 				// .andWhere('abdi.id IS NOT NULL')
-				// .andWhere('pedidos.user_pdf_banca IS NOT NULL')
+				.andWhere('pedidos.user_pdf_banca IS NOT NULL')
 				.select(['pedidos.id', 'pedidos.codigo', 'dp.nombre_empresa', 'pedidos.c_tipo_banca','pedidos.user_clavepedido','pedidos.fecha_envio_atendido_op'])
 				.getMany();
 
