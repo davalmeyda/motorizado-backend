@@ -41,4 +41,12 @@ export class UserService {
 			throw new BadRequestException('No se encontro el usuario');
 		}
 	}
+
+	findOne(UserId: number) {
+		return this.userRepository.findOne({
+			where: { id: UserId },
+		});
+	}
+
+
 }

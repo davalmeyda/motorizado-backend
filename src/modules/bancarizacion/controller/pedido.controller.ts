@@ -26,6 +26,7 @@ import { OperacionOficinaService } from '../services/operacionesOficinas.service
 import { ImagenBancarizacion } from '../entities/imagen_bancarizacion.entity';
 import { ImagenBancarizacionService } from '../services/imagenBancarizacion.service';
 import { pathFile } from 'src/utils/pathFile';
+import { UserService } from '../services/user.service';
 interface ApiResponse {
 	statusCode: number;
 	message: string;
@@ -39,6 +40,7 @@ export class PedidoController {
 		@InjectRepository(Pedido) private readonly pedidoRepository: Repository<Pedido>,
 		private readonly imagenBancarizacion: ImagenBancarizacionService,
 		private readonly OperacionOficina: OperacionOficinaService,
+		private readonly userService: UserService,
 	) {}
 
 	@Post('imagenes')
@@ -117,13 +119,17 @@ export class PedidoController {
 
 	@Get('listar_banca')
 	@ApiOperation({ summary: 'Listar todos los pedidos de bancarizacion' })
-	async getPedidos(@Query('OficinaUser') OficinaUser: number): Promise<ApiResponse> {
+	async getPedidos(@Query('UserId') UserId: number): Promise<ApiResponse> {
 		// Asegúrate de definir el tipo de retorno como Promise<Pedido[]>
 		try {
 
-			if (!OficinaUser) throw new BadRequestException('La oficina del usuario no existe');
+			if (!UserId) throw new BadRequestException('El	 usuario no existe');
 
-			if(OficinaUser.toString() === 'null'){
+			const usuario = await this.userService.findOne(UserId);
+
+			if (!usuario.oficina) throw new BadRequestException('La oficina usuario no existe');
+
+			if(UserId.toString() === 'null'){
 				return {
 					statusCode: 400,
 					message: 'La oficina del usuario no existe',
@@ -131,7 +137,7 @@ export class PedidoController {
 				};
 			}
 
-			const result_oficina = await this.OperacionOficina.findAll(OficinaUser)
+			const result_oficina = await this.OperacionOficina.findAll(usuario.oficina)
 			const Bases =  result_oficina.map(oficina => oficina.base);
 		
 			// console.log('Número de elementos en Bases:', Bases.length);
