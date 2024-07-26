@@ -81,7 +81,7 @@ export class PedidoController {
 					{
 						condicion_envio: 'ENTREGADO SIN SOBRE - CLIENTE',
 						condicion_envio_code: 14,
-						fecha_envio_atendido_op: new Date(),
+						// fecha_envio_atendido_op: new Date(),
 						condicion_envio_at: new Date(),
 						voucher_subido: 1,
 					},
