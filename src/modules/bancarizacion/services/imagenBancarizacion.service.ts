@@ -33,20 +33,20 @@ export class ImagenBancarizacionService {
 		imagen.cant_vouchers = cant_vouchers;
 		imagen.pdf_size = pdf;
 
-		const now = new Date();
-		now.setHours(now.getHours() - 5);
+		// const now = new Date();
+		// now.setHours(now.getHours() - 5);
 
-		imagen.created_at = now;
-		imagen.updated_at = now;
+		imagen.created_at = new Date();
+		imagen.updated_at = new Date();
 		return await this.imagenBancarizacionRepository.save(imagen);
 	}
 
 	async findAll(UserId: number) {
 		const startOfDay = new Date();
-		startOfDay.setHours(startOfDay.getHours() - 5, 0, 0, 0);
+		startOfDay.setHours(0, 0, 0, 0);
 
 		const endOfDay = new Date();
-		endOfDay.setHours(endOfDay.getHours() + 18, 59, 59, 999);
+		endOfDay.setHours(23, 59, 59, 999);
 		return await this.imagenBancarizacionRepository.find({
 			where: {
 				user_id: UserId,
